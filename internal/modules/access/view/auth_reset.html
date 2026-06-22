@@ -1,0 +1,50 @@
+{{define "auth/reset"}}<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{.title}} — GoAdmin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex items-center justify-center">
+  <div class="w-full max-w-sm bg-white rounded-2xl shadow p-8">
+    <h1 class="text-xl font-bold mb-1 text-center">Reset Password</h1>
+    <p class="text-sm text-slate-500 mb-6 text-center">Masukkan kode OTP dari email + password baru.</p>
+
+    {{if .flash_success}}
+    <div class="mb-4 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm px-4 py-3">{{.flash_success}}</div>
+    {{end}}
+    {{if .flash_error}}
+    <div class="mb-4 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-sm px-4 py-3">{{.flash_error}}</div>
+    {{end}}
+
+    <form method="post" action="/auth/reset" class="space-y-4">
+      <input type="hidden" name="_csrf" value="{{._csrf}}">
+      <label class="block">
+        <span class="text-sm text-slate-600">Email</span>
+        <input type="email" name="email" required value="{{.email}}"
+               class="mt-1 w-full border rounded-lg px-3 py-2">
+      </label>
+      <label class="block">
+        <span class="text-sm text-slate-600">Kode OTP</span>
+        <input type="text" name="otp" required inputmode="numeric" autocomplete="one-time-code"
+               class="mt-1 w-full border rounded-lg px-3 py-2 font-mono tracking-widest" placeholder="123456">
+      </label>
+      <label class="block">
+        <span class="text-sm text-slate-600">Password Baru</span>
+        <input type="password" name="password" required minlength="8"
+               class="mt-1 w-full border rounded-lg px-3 py-2" placeholder="••••••••">
+      </label>
+      <label class="block">
+        <span class="text-sm text-slate-600">Konfirmasi Password</span>
+        <input type="password" name="password_confirmation" required minlength="8"
+               class="mt-1 w-full border rounded-lg px-3 py-2" placeholder="••••••••">
+      </label>
+      <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-medium">
+        Reset Password
+      </button>
+    </form>
+    <p class="mt-4 text-center text-sm"><a href="/auth/login" class="text-blue-600 hover:underline">Kembali ke login</a></p>
+  </div>
+</body>
+</html>{{end}}

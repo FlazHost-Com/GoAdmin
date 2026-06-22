@@ -1,0 +1,22 @@
+{{define "dashboard/index"}}{{template "admin/head" .}}
+<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+  <div class="rounded-xl p-5 text-white shadow bg-gradient-to-br from-blue-500 to-blue-600">
+    <div class="text-3xl font-bold">{{.stats.Users}}</div>
+    <div class="opacity-90">Pengguna</div>
+  </div>
+  <div class="rounded-xl p-5 text-white shadow bg-gradient-to-br from-emerald-500 to-emerald-600">
+    <div class="text-3xl font-bold">{{.stats.Roles}}</div>
+    <div class="opacity-90">Peran</div>
+  </div>
+  <div class="rounded-xl p-5 text-white shadow bg-gradient-to-br from-violet-500 to-violet-600">
+    <div class="text-3xl font-bold">{{.stats.Permissions}}</div>
+    <div class="opacity-90">Izin</div>
+  </div>
+</div>
+
+<div class="mt-8 bg-white rounded-xl shadow p-6 text-slate-600">
+  <h2 class="font-semibold text-slate-700 mb-1">Selamat datang di GoAdmin</h2>
+  <p class="text-sm">Panel admin modular (Gin + GORM). Kelola pengguna &amp; peran, atur tema di Pengaturan,
+     lihat katalog elemen di Komponen.</p>
+</div>
+{{template "admin/foot" .}}{{end}}

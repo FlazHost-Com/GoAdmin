@@ -1,0 +1,57 @@
+{{/*
+  Chrome admin bersama (padanan partial head/sidebar/topbar/foot NodeAdmin).
+  Dipakai tiap view admin:
+    {{define "<modul>/<view>"}}{{template "admin/head" .}} ...isi... {{template "admin/foot" .}}{{end}}
+  Locals yang dibaca: .title, .active (penanda menu), .currentUser (di-inject RenderView).
+*/}}
+
+{{define "admin/head"}}<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{.title}} — GoAdmin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 text-slate-800">
+<div class="min-h-screen flex">
+  {{template "admin/sidebar" .}}
+  <div class="flex-1 flex flex-col min-w-0">
+    {{template "admin/topbar" .}}
+    <main class="p-6 flex-1">
+    {{if .flash_success}}<div class="mb-4 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm px-4 py-3">{{.flash_success}}</div>{{end}}
+    {{if .flash_error}}<div class="mb-4 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-sm px-4 py-3">{{.flash_error}}</div>{{end}}{{end}}
+
+{{define "admin/foot"}}</main>
+    <footer class="px-6 py-4 text-center text-xs text-slate-400 border-t border-slate-200">
+      GoAdmin — panel admin
+    </footer>
+  </div>
+</div>
+</body>
+</html>{{end}}
+
+{{define "admin/sidebar"}}<aside class="w-60 bg-slate-900 text-slate-200 flex-col hidden md:flex">
+  <div class="h-16 flex items-center px-5 font-bold text-white border-b border-slate-800">GoAdmin</div>
+  <nav class="p-3 space-y-1 text-sm">
+    <a href="/admin/v1/dashboard" class="block px-3 py-2 rounded {{if eq .active "dashboard"}}bg-slate-800 text-white{{else}}hover:bg-slate-800{{end}}">Dashboard</a>
+    {{if .currentUser}}{{if .currentUser.HasAccess "user.view"}}<a href="/admin/v1/users" class="block px-3 py-2 rounded {{if eq .active "users"}}bg-slate-800 text-white{{else}}hover:bg-slate-800{{end}}">Pengguna</a>{{end}}{{end}}
+    {{if .currentUser}}{{if .currentUser.HasAccess "role.view"}}<a href="/admin/v1/roles" class="block px-3 py-2 rounded {{if eq .active "roles"}}bg-slate-800 text-white{{else}}hover:bg-slate-800{{end}}">Peran</a>{{end}}{{end}}
+    {{if .currentUser}}{{if .currentUser.HasAccess "permission.view"}}<a href="/admin/v1/permissions" class="block px-3 py-2 rounded {{if eq .active "permissions"}}bg-slate-800 text-white{{else}}hover:bg-slate-800{{end}}">Izin</a>{{end}}{{end}}
+    <a href="/admin/v1/setting" class="block px-3 py-2 rounded {{if eq .active "setting"}}bg-slate-800 text-white{{else}}hover:bg-slate-800{{end}}">Pengaturan</a>
+    <a href="/admin/v1/appearance" class="block px-3 py-2 rounded {{if eq .active "appearance"}}bg-slate-800 text-white{{else}}hover:bg-slate-800{{end}}">Tampilan</a>
+    <a href="/admin/v1/components" class="block px-3 py-2 rounded {{if eq .active "components"}}bg-slate-800 text-white{{else}}hover:bg-slate-800{{end}}">Komponen</a>
+    <a href="/admin/v1/profile" class="block px-3 py-2 rounded {{if eq .active "profile"}}bg-slate-800 text-white{{else}}hover:bg-slate-800{{end}}">Profil</a>
+  </nav>
+</aside>{{end}}
+
+{{define "admin/topbar"}}<header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6">
+  <h1 class="font-semibold text-slate-700">{{.title}}</h1>
+  <div class="flex items-center gap-3 text-sm">
+    {{if .currentUser}}
+    {{if .currentUser.Picture}}<img src="{{.currentUser.Picture}}" alt="" class="h-8 w-8 rounded-full object-cover border">{{end}}
+    <span class="text-slate-500">{{.currentUser.Name}}</span>
+    {{end}}
+    <a href="/auth/logout" class="text-rose-600 hover:underline">Keluar</a>
+  </div>
+</header>{{end}}

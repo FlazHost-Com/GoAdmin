@@ -1,0 +1,53 @@
+{{define "home/default"}}<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{.landing.AppName}}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white text-slate-800">
+
+  <!-- Navbar -->
+  <header class="border-b">
+    <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-2 font-bold text-lg">
+        {{if .landing.Logo}}<img src="{{.landing.Logo}}" alt="logo" class="h-8 w-8 rounded">{{end}}
+        <span>{{.landing.AppName}}</span>
+      </div>
+      <a href="/auth/login" class="text-white px-4 py-2 rounded-lg text-sm"
+         style="background-color: {{.landing.Primary}}">Masuk Admin</a>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="max-w-6xl mx-auto px-6 py-24 text-center">
+    <span class="inline-block text-xs font-semibold uppercase tracking-wider mb-4"
+          style="color: {{.landing.Accent}}">Tema {{.landing.ThemeName}}</span>
+    <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight">{{.landing.AppName}}</h1>
+    <p class="mt-5 text-lg text-slate-500 max-w-2xl mx-auto">{{.landing.Description}}</p>
+    <div class="mt-8 flex items-center justify-center gap-3">
+      <a href="/auth/login" class="text-white px-6 py-3 rounded-lg font-medium"
+         style="background-color: {{.landing.Primary}}">Mulai</a>
+      <a href="#kontak" class="px-6 py-3 rounded-lg font-medium border border-slate-300 hover:bg-slate-50">Kontak</a>
+    </div>
+  </section>
+
+  <!-- Kontak (data-driven dari Setting, dengan guard kehadiran) -->
+  {{if or .landing.Email .landing.Phone .landing.Address}}
+  <section id="kontak" class="bg-slate-50 border-t">
+    <div class="max-w-6xl mx-auto px-6 py-16 grid gap-6 sm:grid-cols-3 text-center">
+      {{if .landing.Email}}<div><div class="text-sm text-slate-400">Email</div><div class="font-medium">{{.landing.Email}}</div></div>{{end}}
+      {{if .landing.Phone}}<div><div class="text-sm text-slate-400">Telepon</div><div class="font-medium">{{.landing.Phone}}</div></div>{{end}}
+      {{if .landing.Address}}<div><div class="text-sm text-slate-400">Alamat</div><div class="font-medium">{{.landing.Address}}</div></div>{{end}}
+    </div>
+  </section>
+  {{end}}
+
+  <!-- Footer -->
+  <footer class="border-t">
+    <div class="max-w-6xl mx-auto px-6 py-8 text-center text-sm text-slate-500">{{.landing.Copyright}}</div>
+  </footer>
+
+</body>
+</html>{{end}}

@@ -1,0 +1,40 @@
+{{define "roles/index"}}{{template "admin/head" .}}
+<div class="flex items-center justify-between mb-5">
+  <h2 class="text-lg font-semibold">Daftar Role</h2>
+  <div class="flex gap-2">
+    <form method="get" class="flex gap-2">
+      <input type="text" name="search" value="{{.search}}" placeholder="Cari role…" class="border rounded-lg px-3 py-2 text-sm w-44">
+      <button class="bg-slate-200 px-3 rounded-lg text-sm">Cari</button>
+    </form>
+    <a href="/admin/v1/roles/create" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">+ Tambah</a>
+  </div>
+</div>
+
+<div class="bg-white rounded-xl shadow overflow-hidden">
+  <table class="w-full text-sm">
+    <thead class="bg-slate-100 text-left text-slate-500">
+      <tr><th class="p-3">Nama</th><th class="p-3">Permissions</th><th class="p-3 w-32">Aksi</th></tr>
+    </thead>
+    <tbody>
+      {{range .roles}}
+      <tr class="border-t">
+        <td class="p-3 font-medium">{{.Name}}</td>
+        <td class="p-3 text-slate-500">{{len .Permissions}} izin</td>
+        <td class="p-3">
+          <a href="/admin/v1/roles/{{.ID}}/edit" class="text-blue-600 hover:underline">Ubah</a>
+          {{if ne .Name "Administrator"}}
+          <form method="post" action="/admin/v1/roles/{{.ID}}/delete" class="inline" onsubmit="return confirm('Hapus role {{.Name}}?')">
+            <input type="hidden" name="_csrf" value="{{$._csrf}}">
+            <button class="text-rose-600 hover:underline ml-2">Hapus</button>
+          </form>
+          {{end}}
+        </td>
+      </tr>
+      {{else}}
+      <tr><td colspan="3" class="p-4 text-center text-slate-400">Tidak ada data.</td></tr>
+      {{end}}
+    </tbody>
+  </table>
+</div>
+<p class="mt-3 text-sm text-slate-500">Total {{.meta.Total}} (hal {{.meta.CurrentPage}}/{{.meta.LastPage}})</p>
+{{template "admin/foot" .}}{{end}}

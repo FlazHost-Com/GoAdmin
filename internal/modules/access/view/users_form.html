@@ -1,0 +1,66 @@
+{{define "users/form"}}{{template "admin/head" .}}
+<form method="post" action="{{.action}}" enctype="multipart/form-data" class="max-w-2xl bg-white rounded-xl shadow p-6 space-y-5">
+  <input type="hidden" name="_csrf" value="{{._csrf}}">
+
+  <div class="flex items-center gap-4">
+    {{if .user}}{{if .user.Picture}}
+    <img src="{{.user.Picture}}" alt="foto" class="h-14 w-14 rounded-full object-cover border">
+    {{end}}{{end}}
+    <label class="block">
+      <span class="text-sm text-slate-600">Foto</span>
+      <input type="file" name="picture" accept="image/png,image/jpeg,image/gif,image/webp"
+             class="mt-1 block text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-slate-200 file:px-3 file:py-2">
+    </label>
+  </div>
+
+  <div class="grid gap-4 sm:grid-cols-2">
+    <label class="block">
+      <span class="text-sm text-slate-600">Nama</span>
+      <input type="text" name="name" required value="{{if .user}}{{.user.Name}}{{end}}" class="mt-1 w-full border rounded-lg px-3 py-2">
+    </label>
+    <label class="block">
+      <span class="text-sm text-slate-600">Email</span>
+      <input type="email" name="email" required value="{{if .user}}{{.user.Email}}{{end}}" class="mt-1 w-full border rounded-lg px-3 py-2">
+    </label>
+    <label class="block">
+      <span class="text-sm text-slate-600">Telepon</span>
+      <input type="text" name="phone" value="{{if .user}}{{.user.Phone}}{{end}}" class="mt-1 w-full border rounded-lg px-3 py-2">
+    </label>
+    <label class="block">
+      <span class="text-sm text-slate-600">Status</span>
+      <select name="status" class="mt-1 w-full border rounded-lg px-3 py-2">
+        {{$st := ""}}{{if .user}}{{$st = .user.Status}}{{end}}
+        <option value="Active" {{if eq $st "Active"}}selected{{end}}>Active</option>
+        <option value="Inactive" {{if eq $st "Inactive"}}selected{{end}}>Inactive</option>
+      </select>
+    </label>
+    <label class="block">
+      <span class="text-sm text-slate-600">Timezone</span>
+      <input type="text" name="timezone" value="{{if .user}}{{.user.Timezone}}{{else}}UTC{{end}}" class="mt-1 w-full border rounded-lg px-3 py-2">
+    </label>
+    <label class="block">
+      <span class="text-sm text-slate-600">Password {{if .user}}<span class="text-slate-400">(kosongkan bila tetap)</span>{{end}}</span>
+      <input type="password" name="password" {{if not .user}}required{{end}} class="mt-1 w-full border rounded-lg px-3 py-2" placeholder="••••••••">
+    </label>
+  </div>
+
+  <div>
+    <span class="text-sm text-slate-600">Peran</span>
+    <div class="mt-2 grid gap-2 sm:grid-cols-2 max-h-56 overflow-auto border rounded-lg p-3">
+      {{range .roles}}
+      <label class="flex items-center gap-2 text-sm">
+        <input type="checkbox" name="role_ids" value="{{.ID}}" {{if index $.selected .ID}}checked{{end}}>
+        <span>{{.Name}}</span>
+      </label>
+      {{else}}
+      <p class="text-slate-400 text-sm">Belum ada peran.</p>
+      {{end}}
+    </div>
+  </div>
+
+  <div class="flex gap-2">
+    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium">Simpan</button>
+    <a href="/admin/v1/users" class="px-5 py-2.5 rounded-lg border border-slate-300">Batal</a>
+  </div>
+</form>
+{{template "admin/foot" .}}{{end}}

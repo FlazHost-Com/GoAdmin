@@ -1,0 +1,59 @@
+{{define "setting/index"}}{{template "admin/head" .}}
+<form method="post" action="/admin/v1/setting" enctype="multipart/form-data" class="max-w-3xl bg-white rounded-xl shadow p-6 space-y-5">
+  <input type="hidden" name="_csrf" value="{{._csrf}}">
+
+  <label class="block">
+    <span class="text-sm text-slate-600">Logo</span>
+    <div class="mt-1 flex items-center gap-3">
+      {{if .setting.Logo}}<img src="{{.setting.Logo}}" alt="logo" class="h-12 w-12 rounded object-cover border">{{end}}
+      <input type="file" name="logo" accept="image/png,image/jpeg,image/gif,image/webp"
+             class="text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-slate-200 file:px-3 file:py-2">
+    </div>
+    <p class="text-xs text-slate-400 mt-1">PNG/JPG/GIF/WebP, maks 2MB.</p>
+  </label>
+
+  <div class="grid gap-4 sm:grid-cols-2">
+    <label class="block">
+      <span class="text-sm text-slate-600">Nama Aplikasi</span>
+      <input type="text" name="name" value="{{.setting.Name}}" class="mt-1 w-full border rounded-lg px-3 py-2">
+    </label>
+    <label class="block">
+      <span class="text-sm text-slate-600">Inisial</span>
+      <input type="text" name="initial" value="{{.setting.Initial}}" class="mt-1 w-full border rounded-lg px-3 py-2">
+    </label>
+    <label class="block">
+      <span class="text-sm text-slate-600">Email</span>
+      <input type="email" name="email" value="{{.setting.Email}}" class="mt-1 w-full border rounded-lg px-3 py-2">
+    </label>
+    <label class="block">
+      <span class="text-sm text-slate-600">Telepon</span>
+      <input type="text" name="phone" value="{{.setting.Phone}}" class="mt-1 w-full border rounded-lg px-3 py-2">
+    </label>
+    <label class="block sm:col-span-2">
+      <span class="text-sm text-slate-600">Alamat</span>
+      <input type="text" name="address" value="{{.setting.Address}}" class="mt-1 w-full border rounded-lg px-3 py-2">
+    </label>
+    <label class="block sm:col-span-2">
+      <span class="text-sm text-slate-600">Deskripsi</span>
+      <textarea name="description" rows="3" class="mt-1 w-full border rounded-lg px-3 py-2">{{.setting.Description}}</textarea>
+    </label>
+    <label class="block">
+      <span class="text-sm text-slate-600">Copyright</span>
+      <input type="text" name="copyright" value="{{.setting.Copyright}}" class="mt-1 w-full border rounded-lg px-3 py-2">
+    </label>
+    <label class="block">
+      <span class="text-sm text-slate-600">Tema</span>
+      <select name="theme" class="mt-1 w-full border rounded-lg px-3 py-2">
+        {{range .themes}}
+        <option value="{{.Name}}" {{if eq .Name $.setting.Theme}}selected{{end}}>{{.Name}}</option>
+        {{end}}
+      </select>
+    </label>
+  </div>
+  <div>
+    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium">
+      Simpan
+    </button>
+  </div>
+</form>
+{{template "admin/foot" .}}{{end}}

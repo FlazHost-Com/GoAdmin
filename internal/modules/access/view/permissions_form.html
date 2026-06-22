@@ -1,0 +1,14 @@
+{{define "permissions/form"}}{{template "admin/head" .}}
+<form method="post" action="{{.action}}" class="max-w-xl bg-white rounded-xl shadow p-6 space-y-5">
+  <input type="hidden" name="_csrf" value="{{._csrf}}">
+  <label class="block">
+    <span class="text-sm text-slate-600">Nama Permission</span>
+    <input type="text" name="name" required value="{{if .permission}}{{.permission.Name}}{{end}}"
+           placeholder="mis. user.view" class="mt-1 w-full border rounded-lg px-3 py-2 font-mono text-sm">
+  </label>
+  <div class="flex gap-2">
+    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium">Simpan</button>
+    <a href="/admin/v1/permissions" class="px-5 py-2.5 rounded-lg border border-slate-300">Batal</a>
+  </div>
+</form>
+{{template "admin/foot" .}}{{end}}

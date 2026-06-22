@@ -1,0 +1,29 @@
+{{define "roles/form"}}{{template "admin/head" .}}
+<form method="post" action="{{.action}}" class="max-w-2xl bg-white rounded-xl shadow p-6 space-y-5">
+  <input type="hidden" name="_csrf" value="{{._csrf}}">
+  <label class="block">
+    <span class="text-sm text-slate-600">Nama Role</span>
+    <input type="text" name="name" required value="{{if .role}}{{.role.Name}}{{end}}"
+           class="mt-1 w-full border rounded-lg px-3 py-2">
+  </label>
+
+  <div>
+    <span class="text-sm text-slate-600">Permissions</span>
+    <div class="mt-2 grid gap-2 sm:grid-cols-2 max-h-72 overflow-auto border rounded-lg p-3">
+      {{range .permissions}}
+      <label class="flex items-center gap-2 text-sm">
+        <input type="checkbox" name="permission_ids" value="{{.ID}}" {{if index $.selected .ID}}checked{{end}}>
+        <span class="font-mono text-xs">{{.Name}}</span>
+      </label>
+      {{else}}
+      <p class="text-slate-400 text-sm">Belum ada permission.</p>
+      {{end}}
+    </div>
+  </div>
+
+  <div class="flex gap-2">
+    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium">Simpan</button>
+    <a href="/admin/v1/roles" class="px-5 py-2.5 rounded-lg border border-slate-300">Batal</a>
+  </div>
+</form>
+{{template "admin/foot" .}}{{end}}
