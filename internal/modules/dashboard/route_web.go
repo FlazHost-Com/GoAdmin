@@ -24,5 +24,5 @@ func registerWebRoutes(ctx *router.RegistrationContext) {
 	admin.Use(jwtless.EnsureAuthenticatedWeb("/auth/login"))
 
 	admin.GET("/dashboard", ctl.Index)
-	router.Register("admin.v1.dashboard.index", "/admin/v1/dashboard")
+	router.Register("GET", "admin.v1.dashboard.index", "/admin/v1/dashboard")
 }

@@ -21,7 +21,7 @@ func NewSettingController(settings service.ISettingService) *SettingController {
 }
 
 // Show → GET /api/v1/setting (setting tunggal + katalog tema).
-func (ctl *SettingController) Show(c *gin.Context) {
+func (ctl *SettingController) Index(c *gin.Context) {
 	setting, err := ctl.settings.Get(c.Request.Context())
 	if err != nil {
 		c.Error(err)

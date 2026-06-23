@@ -1,35 +1,17 @@
-{{define "auth/forgot"}}<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{.title}} — GoAdmin</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-slate-100 text-slate-800 min-h-screen flex items-center justify-center">
-  <div class="w-full max-w-sm bg-white rounded-2xl shadow p-8">
-    <h1 class="text-xl font-bold mb-1 text-center">Lupa Password</h1>
-    <p class="text-sm text-slate-500 mb-6 text-center">Masukkan email — kami kirim kode OTP reset.</p>
-
-    {{if .flash_success}}
-    <div class="mb-4 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm px-4 py-3">{{.flash_success}}</div>
-    {{end}}
-    {{if .flash_error}}
-    <div class="mb-4 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-sm px-4 py-3">{{.flash_error}}</div>
-    {{end}}
-
-    <form method="post" action="/auth/forgot" class="space-y-4">
-      <input type="hidden" name="_csrf" value="{{._csrf}}">
-      <label class="block">
-        <span class="text-sm text-slate-600">Email</span>
-        <input type="email" name="email" required autofocus
-               class="mt-1 w-full border rounded-lg px-3 py-2" placeholder="admin@admin.com">
-      </label>
-      <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-medium">
-        Kirim OTP
-      </button>
-    </form>
-    <p class="mt-4 text-center text-sm"><a href="/auth/login" class="text-blue-600 hover:underline">Kembali ke login</a></p>
+{{define "auth/forgot"}}{{template "auth/head" .}}
+<div class="w-full max-w-sm tw-card p-8">
+  <div class="mb-6 text-center">
+    {{if .setting}}{{if .setting.Logo}}<img class="h-12 mx-auto object-contain mb-3" src="{{.setting.Logo}}">{{end}}{{end}}
+    <h1 class="text-xl font-bold" style="color:var(--primary)">Lupa Password</h1>
+    <p class="text-sm text-gray-500">Masukkan email — kami kirim kode OTP reset.</p>
   </div>
-</body>
-</html>{{end}}
+  {{if .flash_error}}<div class="alert alert-danger">{{.flash_error}}</div>{{end}}
+  {{if .flash_success}}<div class="alert alert-success">{{.flash_success}}</div>{{end}}
+  <form method="post" action="/admin/v1/auth/reset/request">
+    <input type="hidden" name="_csrf" value="{{._csrf}}">
+    <div class="mb-3"><label class="form-label fw-semibold">Email</label><input type="email" name="email" required autofocus class="form-control" placeholder="admin@admin.com"></div>
+    <button type="submit" class="btn btn-primary-tw w-100" style="padding:.6rem">Kirim OTP</button>
+  </form>
+  <p class="text-center mt-4" style="font-size:.85rem"><a href="/auth/login" class="text-primary-tw text-decoration-none">Kembali ke login</a></p>
+</div>
+{{template "auth/foot" .}}{{end}}

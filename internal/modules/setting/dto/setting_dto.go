@@ -12,8 +12,10 @@ type UpdateSettingInput struct {
 	Address     string `json:"address" form:"address" binding:"omitempty,max=255"`
 	Email       string `json:"email" form:"email" binding:"omitempty,email,max=255"`
 	Copyright   string `json:"copyright" form:"copyright" binding:"omitempty,max=255"`
-	// Logo = URL hasil upload (diisi controller web setelah validasi+simpan file).
-	Logo string `json:"logo" form:"logo" binding:"omitempty,max=255"`
+	// Icon/Logo/LoginImage = URL hasil upload (diisi controller setelah validasi+simpan).
+	Icon       string `json:"icon" form:"icon" binding:"omitempty,max=255"`
+	Logo       string `json:"logo" form:"logo" binding:"omitempty,max=255"`
+	LoginImage string `json:"login_image" form:"login_image" binding:"omitempty,max=255"`
 	// Theme & FeTemplate = pilihan switcher (divalidasi terhadap katalog di service).
 	Theme      string `json:"theme" form:"theme" binding:"omitempty,max=20"`
 	FeTemplate string `json:"fe_template" form:"fe_template" binding:"omitempty,max=80"`

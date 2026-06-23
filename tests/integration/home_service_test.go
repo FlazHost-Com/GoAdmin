@@ -35,7 +35,7 @@ func TestHomeService_LandingDefault(t *testing.T) {
 	if ld.AppName != "GoAdmin" {
 		t.Fatalf("app name: harap GoAdmin, dapat %s", ld.AppName)
 	}
-	if ld.ThemeName != "Blue" || ld.Primary != "#2563eb" {
+	if ld.ThemeName != "Blue" || ld.Primary != "#3B82F6" {
 		t.Fatalf("tema default salah: %s / %s", ld.ThemeName, ld.Primary)
 	}
 }
@@ -57,7 +57,7 @@ func TestHomeService_LandingBindsSetting(t *testing.T) {
 	if ld.AppName != "Toko Saya" {
 		t.Fatalf("nama tak terikat: %s", ld.AppName)
 	}
-	if ld.ThemeName != "Green" || ld.Primary != "#16a34a" {
+	if ld.ThemeName != "Green" || ld.Primary != "#10B981" {
 		t.Fatalf("tema tak terikat: %s / %s", ld.ThemeName, ld.Primary)
 	}
 	if ld.Email != "halo@toko.com" {

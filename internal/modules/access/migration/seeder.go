@@ -1,6 +1,8 @@
 package migration
 
 import (
+	"errors"
+
 	"gorm.io/gorm"
 
 	"goadmin/internal/auth"
@@ -8,36 +10,27 @@ import (
 	"goadmin/internal/modules/access/model"
 )
 
-// CorePermissions = izin granular bawaan untuk modul inti.
-var CorePermissions = []string{
-	"user.view", "user.create", "user.update", "user.delete",
-	"role.view", "role.create", "role.update", "role.delete",
-	"permission.view", "permission.create", "permission.update", "permission.delete",
-}
-
-// Seed membuat data awal: permission inti, role Administrator (semua izin),
-// dan user admin default. Idempoten (aman dijalankan berulang).
+// Seed membuat data awal: role Administrator + user admin default. Idempoten.
+//
+// CATATAN RBAC route-driven (a la NodeAdmin): permission TIDAK lagi di-seed dari
+// daftar tetap — diturunkan dari named-route registry lewat
+// bootstrap.SyncPermissions (dipanggil setelah app.Build) + lazy saat buka
+// halaman Permission. Administrator BYPASS RBAC (IsAdministrator), jadi tak perlu
+// di-assign permission apa pun di sini.
 func Seed(db *gorm.DB, adminEmail, adminPassword string, bcryptRounds int) error {
-	// 1. Permissions.
-	perms := make([]model.Permission, 0, len(CorePermissions))
-	for _, name := range CorePermissions {
-		p := model.Permission{ID: helpers.NewID(), Name: name, GuardName: "web"}
-		if err := db.Where("name = ?", name).FirstOrCreate(&p, model.Permission{Name: name}).Error; err != nil {
+	// 1. Role Administrator (guard web). Tanpa assignment permission — bypass.
+	var admin model.Role
+	err := db.Where("name = ? AND guard_name = ?", model.RoleAdministrator, "web").First(&admin).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		admin = model.Role{ID: helpers.NewID(), Name: model.RoleAdministrator, GuardName: "web", Status: model.StatusActive}
+		if err := db.Create(&admin).Error; err != nil {
 			return err
 		}
-		perms = append(perms, p)
-	}
-
-	// 2. Role Administrator + semua permission.
-	admin := model.Role{ID: helpers.NewID(), Name: model.RoleAdministrator, GuardName: "web"}
-	if err := db.Where("name = ?", model.RoleAdministrator).FirstOrCreate(&admin, model.Role{Name: model.RoleAdministrator}).Error; err != nil {
-		return err
-	}
-	if err := db.Model(&admin).Association("Permissions").Replace(perms); err != nil {
+	} else if err != nil {
 		return err
 	}
 
-	// 3. User admin default.
+	// 2. User admin default.
 	var count int64
 	if err := db.Model(&model.User{}).Where("email = ?", adminEmail).Count(&count).Error; err != nil {
 		return err

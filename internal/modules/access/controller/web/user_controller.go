@@ -4,12 +4,16 @@ package web
 
 import (
 	"net/http"
+	"net/mail"
+	"strings"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 
-	accessmw "goadmin/internal/modules/access/middleware"
+	"goadmin/internal/helpers"
+	"goadmin/internal/middleware"
 	"goadmin/internal/modules/access/dto"
+	accessmw "goadmin/internal/modules/access/middleware"
 	"goadmin/internal/modules/access/model"
 	"goadmin/internal/modules/access/service"
 	"goadmin/internal/storage"
@@ -43,22 +47,37 @@ func (ctl *UserController) pictureURL(c *gin.Context) (string, error) {
 	return storage.ValidateAndSave(c.Request.Context(), ctl.storage, f)
 }
 
-// Index → GET /admin/v1/users (daftar user + search + paginasi).
+// Index → GET /admin/v1/access/user (daftar user + filter per-kolom + paginasi).
 func (ctl *UserController) Index(c *gin.Context) {
-	var q dto.ListQuery
-	_ = c.ShouldBindQuery(&q)
+	q, qbase := bindListQuery(c)
 	res, err := ctl.users.Index(c.Request.Context(), q)
 	if err != nil {
 		c.Error(err)
 		return
 	}
+	roles, err := ctl.allRoles(c) // untuk dropdown filter q_role
+	if err != nil {
+		c.Error(err)
+		return
+	}
 	view.RenderView(c, "access/users/index", gin.H{
-		"title": "Manajemen User", "active": "users",
-		"users": res.Data, "meta": res.Meta, "search": q.Search,
+		"title": "Manajemen User", "active": "user",
+		"users": res.Data, "meta": res.Meta,
+		"filter": filterMap(q), "qbase": qbase, "roles": roles,
 	})
 }
 
-// Create → GET /admin/v1/users/create.
+// DeleteSelected → POST /admin/v1/access/user/delete_selected (bulk delete tabel).
+func (ctl *UserController) DeleteSelected(c *gin.Context) {
+	if err := ctl.users.DestroyMany(c.Request.Context(), selectedIDs(c)); err != nil {
+		setFlashError(sessions.Default(c), errMessage(err))
+	} else {
+		setFlashSuccess(sessions.Default(c), "Pengguna terpilih berhasil dihapus.")
+	}
+	c.Redirect(http.StatusFound, "/admin/v1/access/user")
+}
+
+// Create → GET /admin/v1/access/user/create.
 func (ctl *UserController) Create(c *gin.Context) {
 	roles, err := ctl.allRoles(c)
 	if err != nil {
@@ -66,33 +85,41 @@ func (ctl *UserController) Create(c *gin.Context) {
 		return
 	}
 	view.RenderView(c, "users/form", gin.H{
-		"title": "Tambah Pengguna", "active": "users",
-		"action": "/admin/v1/users", "user": nil,
+		"title": "Tambah Pengguna", "active": "user",
+		"action": "/admin/v1/access/user/store", "user": nil,
 		"roles": roles, "selected": map[string]bool{},
+		"timezones": helpers.Timezones(),
 	})
 }
 
-// Store → POST /admin/v1/users.
+// Store → POST /admin/v1/access/user.
 func (ctl *UserController) Store(c *gin.Context) {
 	var in dto.CreateUserInput
 	_ = c.ShouldBind(&in)
+	sess := sessions.Default(c)
+
+	errs := userFormErrors(in.Name, in.Email, in.Password, in.PasswordConfirmation, true)
 	if url, perr := ctl.pictureURL(c); perr != nil {
-		setFlashError(sessions.Default(c), errMessage(perr))
-		c.Redirect(http.StatusFound, "/admin/v1/users/create")
-		return
+		errs["picture"] = errMessage(perr)
 	} else if url != "" {
 		in.Picture = url
 	}
-	if _, err := ctl.users.Store(c.Request.Context(), in, actorID(c)); err != nil {
-		setFlashError(sessions.Default(c), errMessage(err))
-		c.Redirect(http.StatusFound, "/admin/v1/users/create")
+	if len(errs) > 0 {
+		middleware.SetFieldErrors(sess, errs, userOld(c))
+		setFlashError(sess, "Periksa kembali isian yang ditandai.")
+		c.Redirect(http.StatusFound, "/admin/v1/access/user/create")
 		return
 	}
-	setFlashSuccess(sessions.Default(c), "Pengguna berhasil dibuat.")
-	c.Redirect(http.StatusFound, "/admin/v1/users")
+	if _, err := ctl.users.Store(c.Request.Context(), in, actorID(c)); err != nil {
+		setFlashError(sess, errMessage(err))
+		c.Redirect(http.StatusFound, "/admin/v1/access/user/create")
+		return
+	}
+	setFlashSuccess(sess, "Pengguna berhasil dibuat.")
+	c.Redirect(http.StatusFound, "/admin/v1/access/user")
 }
 
-// Edit → GET /admin/v1/users/:id/edit.
+// Edit → GET /admin/v1/access/user/:id/edit.
 func (ctl *UserController) Edit(c *gin.Context) {
 	user, err := ctl.users.Show(c.Request.Context(), c.Param("id"))
 	if err != nil {
@@ -109,41 +136,88 @@ func (ctl *UserController) Edit(c *gin.Context) {
 		selected[r.ID] = true
 	}
 	view.RenderView(c, "users/form", gin.H{
-		"title": "Ubah Pengguna", "active": "users",
-		"action": "/admin/v1/users/" + user.ID, "user": user,
+		"title": "Ubah Pengguna", "active": "user",
+		"action": "/admin/v1/access/user/" + user.ID + "/update?_method=PUT", "user": user,
 		"roles": roles, "selected": selected,
+		"timezones": helpers.Timezones(),
 	})
 }
 
-// Update → POST /admin/v1/users/:id.
+// Update → POST /admin/v1/access/user/:id.
 func (ctl *UserController) Update(c *gin.Context) {
 	id := c.Param("id")
 	var in dto.UpdateUserInput
 	_ = c.ShouldBind(&in)
+	sess := sessions.Default(c)
+
+	// Password opsional pada update (kosong = tetap) → passwordRequired=false.
+	errs := userFormErrors(in.Name, in.Email, in.Password, in.PasswordConfirmation, false)
 	if url, perr := ctl.pictureURL(c); perr != nil {
-		setFlashError(sessions.Default(c), errMessage(perr))
-		c.Redirect(http.StatusFound, "/admin/v1/users/"+id+"/edit")
-		return
+		errs["picture"] = errMessage(perr)
 	} else if url != "" {
 		in.Picture = url
 	}
-	if _, err := ctl.users.Update(c.Request.Context(), id, in, actorID(c)); err != nil {
-		setFlashError(sessions.Default(c), errMessage(err))
-		c.Redirect(http.StatusFound, "/admin/v1/users/"+id+"/edit")
+	if len(errs) > 0 {
+		middleware.SetFieldErrors(sess, errs, userOld(c))
+		setFlashError(sess, "Periksa kembali isian yang ditandai.")
+		c.Redirect(http.StatusFound, "/admin/v1/access/user/"+id+"/edit")
 		return
 	}
-	setFlashSuccess(sessions.Default(c), "Pengguna berhasil diperbarui.")
-	c.Redirect(http.StatusFound, "/admin/v1/users")
+	if _, err := ctl.users.Update(c.Request.Context(), id, in, actorID(c)); err != nil {
+		setFlashError(sess, errMessage(err))
+		c.Redirect(http.StatusFound, "/admin/v1/access/user/"+id+"/edit")
+		return
+	}
+	setFlashSuccess(sess, "Pengguna berhasil diperbarui.")
+	c.Redirect(http.StatusFound, "/admin/v1/access/user")
 }
 
-// Destroy → POST /admin/v1/users/:id/delete.
+// userFormErrors memvalidasi field form user (web) untuk inline error — padanan
+// validasi NodeAdmin: name wajib, email format, password min8 + cocok konfirmasi.
+// passwordRequired=true pada create; pada update password boleh kosong (tetap).
+func userFormErrors(name, email, password, passwordConfirmation string, passwordRequired bool) map[string]string {
+	errs := map[string]string{}
+	if strings.TrimSpace(name) == "" {
+		errs["name"] = "Name wajib diisi."
+	}
+	if strings.TrimSpace(email) == "" {
+		errs["email"] = "Email wajib diisi."
+	} else if _, e := mail.ParseAddress(email); e != nil {
+		errs["email"] = "Format email tidak valid."
+	}
+	if passwordRequired && password == "" {
+		errs["password"] = "Password wajib diisi."
+	}
+	if password != "" {
+		if len(password) < 8 {
+			errs["password"] = "Password minimal 8 karakter."
+		}
+		if password != passwordConfirmation {
+			errs["password_confirmation"] = "Password & confirm password not match."
+		}
+	}
+	return errs
+}
+
+// userOld menyalin nilai field teks dari form (untuk repopulate saat validasi gagal).
+func userOld(c *gin.Context) map[string]string {
+	old := map[string]string{}
+	for _, k := range []string{"code", "name", "phone", "email", "timezone", "status", "blocked_reason"} {
+		if v := c.PostForm(k); v != "" {
+			old[k] = v
+		}
+	}
+	return old
+}
+
+// Destroy → DELETE /admin/v1/access/user/:id/delete (form POST + ?_method=DELETE).
 func (ctl *UserController) Destroy(c *gin.Context) {
 	if err := ctl.users.Destroy(c.Request.Context(), c.Param("id")); err != nil {
 		setFlashError(sessions.Default(c), errMessage(err))
 	} else {
 		setFlashSuccess(sessions.Default(c), "Pengguna berhasil dihapus.")
 	}
-	c.Redirect(http.StatusFound, "/admin/v1/users")
+	c.Redirect(http.StatusFound, "/admin/v1/access/user")
 }
 
 // allRoles mengambil seluruh role (untuk pilihan di form).

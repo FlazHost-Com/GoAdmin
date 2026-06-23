@@ -65,7 +65,9 @@ func (Product) TableName() string { return "products" }
 
 ## 2. Migration
 
-`migration/automigrate.go` — daftarkan model ke AutoMigrate (folder `migration/` dikecualikan checker, jadi raw SQL/seed boleh bila perlu). Ikuti pola `access/migration/`.
+`migration/automigrate.go` — daftarkan model ke AutoMigrate (dev/test; folder `migration/` dikecualikan checker). Ikuti pola `access/migration/`.
+
+> **Produksi**: tambahkan migrasi **versioned + reversible** (golang-migrate) untuk perubahan skema — `make migration name=create_products` membuat `internal/migrate/migrations/NNNNNN_create_products.{up,down}.sql`; isi SQL portabel (VARCHAR/TEXT/BIGINT/BOOLEAN/TIMESTAMP, tanpa `IF NOT EXISTS` pada index). AutoMigrate (dari model) = jalur cepat dev; SQL versioned = jalur produksi (riwayat + rollback). Jaga keduanya sinkron.
 
 ```go
 func AutoMigrate(db *gorm.DB) error {

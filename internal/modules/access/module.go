@@ -56,7 +56,7 @@ func (m *Module) Register(ctx *router.RegistrationContext) {
 
 	// --- Route API (selalu) ---
 	registerAPIRoutes(ctx, guard, apiDeps{
-		auth: apictl.NewAuthController(authSvc),
+		auth: apictl.NewAuthController(authSvc, userSvc, resetSvc),
 		user: apictl.NewUserController(userSvc),
 		role: apictl.NewRoleController(roleSvc),
 		perm: apictl.NewPermissionController(permSvc),

@@ -20,6 +20,7 @@ type IUserService interface {
 	Store(ctx context.Context, in dto.CreateUserInput, actorID string) (*model.User, error)
 	Update(ctx context.Context, id string, in dto.UpdateUserInput, actorID string) (*model.User, error)
 	Destroy(ctx context.Context, id string) error
+	DestroyMany(ctx context.Context, ids []string) error
 }
 
 // IRoleService = kontrak manajemen role + permission assignment.
@@ -29,6 +30,13 @@ type IRoleService interface {
 	Store(ctx context.Context, in dto.CreateRoleInput) (*model.Role, error)
 	Update(ctx context.Context, id string, in dto.UpdateRoleInput) (*model.Role, error)
 	Destroy(ctx context.Context, id string) error
+	DestroyMany(ctx context.Context, ids []string) error
+	// Kelola permission per-role (padanan RoleService.permission* NodeAdmin).
+	PermissionList(ctx context.Context, roleID string, q dto.ListQuery) (helpers.Paginated[model.Permission], *model.Role, error)
+	AssignPermission(ctx context.Context, roleID, permID string) error
+	AssignPermissions(ctx context.Context, roleID string, permIDs []string) error
+	UnassignPermission(ctx context.Context, roleID, permID string) error
+	UnassignPermissions(ctx context.Context, roleID string, permIDs []string) error
 }
 
 // IPasswordResetService = kontrak reset password lewat OTP email.
@@ -47,4 +55,8 @@ type IPermissionService interface {
 	Store(ctx context.Context, in dto.CreatePermissionInput) (*model.Permission, error)
 	Update(ctx context.Context, id string, in dto.UpdatePermissionInput) (*model.Permission, error)
 	Destroy(ctx context.Context, id string) error
+	DestroyMany(ctx context.Context, ids []string) error
+	// SyncFromRoutes menurunkan permission dari named-route registry (route-driven,
+	// padanan NodeAdmin getAllRegisteredRoute). Idempoten.
+	SyncFromRoutes(ctx context.Context) error
 }

@@ -22,7 +22,8 @@ Landing publik di `/`, login di `/auth/login`, dashboard di `/admin/v1/dashboard
 ## Perintah (Makefile)
 
 ```
-make migrate   # AutoMigrate semua modul + seed admin (dev)
+make migrate   # migrasi DB: sqlite→AutoMigrate (dev), mysql/postgres→golang-migrate
+make migration name=add_orders   # buat file migrasi baru (.up/.down.sql)
 make run       # jalankan server (cmd/server)
 make check     # convention checker (gate pola/prinsip)
 make verify    # check + vet + build + test  ← gate "selesai"
@@ -38,7 +39,7 @@ make module ARGS="--name product"   # scaffold modul baru lengkap
 - **Upload gambar aman** — `internal/storage` driver **local/disk atau S3/OSS/MinIO** (via `STORAGE_DRIVER`), validasi **magic-byte** (bukan MIME klien) + whitelist + batas ukuran + **re-encode** (buang metadata/payload); dipakai logo (Setting) & avatar (Profil/User).
 - **Setting global** — singleton ber-**cache** (TTL + invalidasi saat update) + **theme switcher** (palet di DB, ganti tanpa rebuild).
 - **Profile** self-service (least-privilege: tak bisa ubah status/role sendiri).
-- **Dashboard** statistik, **Components** showcase UI, **Home** landing publik data-driven ke Setting + **frontend template switcher** (`/admin/v1/appearance`): builtin (Go view) + katalog **eksternal opentailwind** (opsional `FE_TEMPLATE_REMOTE=true` → fetch daftar + unduh on-demand + cache + anti-SSRF; default off → katalog kurasi).
+- **Dashboard** statistik, **Components** showcase UI, **Home** landing publik data-driven ke Setting + **frontend template switcher DI-FOLD ke halaman Setting** (`/admin/v1/setting`, persis NodeAdmin — bukan halaman terpisah; preview proxy `admin.v1.setting.fe_preview` = `/admin/v1/setting/fe-preview/:slug`): builtin (Go view) + katalog **eksternal opentailwind** (opsional `FE_TEMPLATE_REMOTE=true` → fetch daftar + unduh on-demand + cache + anti-SSRF; default off → katalog kurasi).
 - **Email/SMTP** — `internal/mail` (SMTP via `net/smtp`, fallback log saat dev) tersedia di container untuk reset OTP/notifikasi.
 - **Multi-database** (MySQL/Postgres/SQLite) dialect-agnostic; kode dijaga portabel (tipe abstrak, `ciLike`, tanpa raw SQL vendor) — di-enforce checker.
 - **Guardrail** — `cmd/checkconventions` (CI gate) + generator `make module` + `AGENTS.md`.
@@ -52,7 +53,8 @@ Semua konfigurasi via `.env` (lihat [`.env.example`](.env.example)), dibaca **ha
 ```
 cmd/
   server/           entry-point (full/api via APP_MODE), graceful shutdown
-  migrate/          AutoMigrate + seed admin (dev)
+  migrate/          migrasi: golang-migrate (mysql/pg) / AutoMigrate (sqlite) + seed
+internal/migrate/   migrasi VERSIONED golang-migrate (migrations/*.up/.down.sql)
   checkconventions/ convention checker (go/ast)
   make-module/      generator modul (text/template)
 internal/
@@ -90,7 +92,7 @@ Test berjalan di **SQLite in-memory** (cepat, membuktikan portabilitas). Lihat [
 ## Deployment (ringkas)
 
 1. Set `NODE_ENV=production`, `DB_TYPE` + kredensial DB, `REDIS_URL`, dan **`SESSION_SECRET`/`JWT_SECRET`** (wajib).
-2. Migrasi: untuk produksi gunakan tool migrasi versioned (golang-migrate); `make migrate` (AutoMigrate) untuk dev.
+2. Migrasi: **produksi** pakai migrasi **versioned + reversible** (golang-migrate, SQL `.up/.down` di `internal/migrate/migrations/`) — `make migrate` (mysql/postgres), rollback `make migrate ARGS="-down 1"`, cek versi `make migrate ARGS="-version"`. **Dev** (sqlite) pakai AutoMigrate cepat dari model. CI menguji migrasi nyata di matrix MySQL+Postgres (up→down→up).
 3. `go build -o goadmin ./cmd/server` lalu jalankan di belakang reverse proxy (TLS). Cookie otomatis `Secure` di production.
 4. Stateless → siap horizontal scaling (sesi/blacklist di Redis).
 

@@ -10,6 +10,8 @@ package view
 import (
 	"html/template"
 	"net/http"
+	"reflect"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 
@@ -21,8 +23,8 @@ type Engine struct {
 	tmpl *template.Template
 }
 
-// Funcs default tersedia di semua template.
-func funcMap() template.FuncMap {
+// FuncMap = fungsi template default (dipakai Load + test view).
+func FuncMap() template.FuncMap {
 	return template.FuncMap{
 		// route("nama", "id", "7") → URL bernama (named-routes di template).
 		"route": func(name string, pairs ...string) string {
@@ -32,13 +34,51 @@ func funcMap() template.FuncMap {
 			}
 			return router.Route(name, params)
 		},
+		"add": func(a, b int) int { return a + b },
+		"sub": func(a, b int) int { return a - b },
+		// safeHTML menandai string sbg HTML tepercaya (TIDAK di-escape). Pakai
+		// HANYA untuk konten yang sudah disanitasi (mis. deskripsi Setting via
+		// helpers.CleanRichText) — agar rich-text editor terender di landing.
+		"safeHTML": func(s string) template.HTML { return template.HTML(s) }, //nolint:gosec // input sudah disanitasi server
+
+		// pageURL("q_name=x&", 2) → ?q_name=x&q_page=2 sebagai template.URL
+		// (tepercaya) agar html/template TIDAK meng-escape '='/'&' di qbase.
+		"pageURL": func(qbase string, page int) template.URL {
+			return template.URL("?" + qbase + "q_page=" + strconv.Itoa(page)) //nolint:gosec // qbase dirakit server dari url.Values.Encode()
+		},
+		// seq 1 n → []int{1..n} (untuk loop pagination).
+		"seq": func(from, to int) []int {
+			if to < from {
+				return nil
+			}
+			out := make([]int, 0, to-from+1)
+			for i := from; i <= to; i++ {
+				out = append(out, i)
+			}
+			return out
+		},
+		// hasAccess(currentUser, "nama.route", "GET") → bool. Gating UI berbasis
+		// permission route-driven (padanan hasAccess(name, method) NodeAdmin di
+		// sidebar.ejs). nil-aman (user belum login → false). Administrator bypass
+		// (User.HasAccess true). Memakai interface agar view tak meng-import model.
+		"hasAccess": func(user any, name, method string) bool {
+			if user == nil {
+				return false
+			}
+			// Guard typed-nil pointer (mis. (*User)(nil)) agar tak panik.
+			if rv := reflect.ValueOf(user); rv.Kind() == reflect.Ptr && rv.IsNil() {
+				return false
+			}
+			h, ok := user.(interface{ HasAccess(name, method string) bool })
+			return ok && h.HasAccess(name, method)
+		},
 	}
 }
 
 // Load mem-parse seluruh template (layout + modul) dari glob pattern.
 // Mengembalikan nil-aman bila tak ada file (mode api / belum ada view).
 func Load(patterns ...string) (*Engine, error) {
-	tmpl := template.New("").Funcs(funcMap())
+	tmpl := template.New("").Funcs(FuncMap())
 	var loaded bool
 	for _, p := range patterns {
 		t, err := tmpl.ParseGlob(p)
@@ -50,7 +90,7 @@ func Load(patterns ...string) (*Engine, error) {
 		loaded = true
 	}
 	if !loaded {
-		return &Engine{tmpl: template.New("").Funcs(funcMap())}, nil
+		return &Engine{tmpl: template.New("").Funcs(FuncMap())}, nil
 	}
 	return &Engine{tmpl: tmpl}, nil
 }
@@ -79,6 +119,24 @@ func RenderView(c *gin.Context, name string, locals gin.H) {
 	}
 	if v, ok := c.Get("flash_error"); ok {
 		locals["flash_error"] = v
+	}
+	// Error per-field + old input (validasi inline, padanan getError/old NodeAdmin).
+	// Selalu di-set (default map kosong) agar `index .errors "x"` nil-aman di template.
+	locals["errors"] = map[string]string{}
+	if v, ok := c.Get("field_errors"); ok {
+		locals["errors"] = v
+	}
+	locals["old"] = map[string]string{}
+	if v, ok := c.Get("field_old"); ok {
+		locals["old"] = v
+	}
+	// Tema aktif + setting (diset di app via ThemeContext) → chrome themeable.
+	for _, k := range []string{"theme", "themeName", "themes", "setting"} {
+		if v, ok := c.Get(k); ok {
+			if _, exists := locals[k]; !exists {
+				locals[k] = v
+			}
+		}
 	}
 	c.HTML(http.StatusOK, name, locals)
 }

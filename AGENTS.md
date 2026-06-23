@@ -37,6 +37,7 @@ Urutan middleware RBAC **wajib**: autentikasi dulu, baru otorisasi (`EnsureAuthe
    - Status/kategori: pakai `varchar` + konstanta Go (mis. `StatusActive`), **bukan** `ENUM` native.
    - Query: **dilarang `.Raw()`/`.Exec()`** (raw SQL) & **`LIKE` manual** di modul (case-sensitivity beda MySQL vs PG/SQLite) — pakai **`helpers.CiLike/CiLikeAny`** (`LOWER(..) LIKE LOWER(..)`). Folder `migration/` dikecualikan (boleh DDL).
    - Test jalan di SQLite in-memory → membuktikan portabilitas. Checker menolak pelanggaran di atas.
+   - **Migrasi**: dev/test pakai **AutoMigrate** (per-modul `migration/automigrate.go`, dari model). PRODUKSI (mysql/postgres) pakai **golang-migrate** versioned+reversible: SQL `.up/.down` di `internal/migrate/migrations/` (`make migration name=...` untuk file baru). Saat menambah/mengubah kolom model, **tambahkan juga migrasi SQL** agar skema produksi sinkron. CI menguji migrasi di matrix MySQL+Postgres.
 
 ## Sebelum Coding: Sajikan Rencana Artefak + Konfirmasi
 
@@ -118,6 +119,8 @@ internal/modules/<m>/
 
 ```
 make module ARGS="--name product"   # scaffold modul baru (ikut pola access)
+make migrate                        # migrasi DB (sqlite→AutoMigrate, mysql/pg→golang-migrate) + seed
+make migration name=add_orders      # buat file migrasi versioned (.up/.down.sql)
 make check     # convention checker (WAJIB sebelum selesai)
 make verify    # gate lengkap: check + vet + build + test
 make test      # go test ./...

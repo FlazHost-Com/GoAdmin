@@ -20,7 +20,8 @@ func CiLike(db *gorm.DB, column, keyword string) *gorm.DB {
 	if kw == "" {
 		return db
 	}
-	return db.Where("LOWER("+column+") LIKE LOWER(?)", "%"+kw+"%")
+	// Quote identifier per-dialek (aman utk reserved word seperti `desc`).
+	return db.Where("LOWER("+db.Statement.Quote(column)+") LIKE LOWER(?)", "%"+kw+"%")
 }
 
 // CiLikeAny mencari keyword di banyak kolom sekaligus (OR), tetap portabel.
@@ -32,7 +33,7 @@ func CiLikeAny(db *gorm.DB, columns []string, keyword string) *gorm.DB {
 	conds := make([]string, 0, len(columns))
 	args := make([]interface{}, 0, len(columns))
 	for _, c := range columns {
-		conds = append(conds, "LOWER("+c+") LIKE LOWER(?)")
+		conds = append(conds, "LOWER("+db.Statement.Quote(c)+") LIKE LOWER(?)")
 		args = append(args, "%"+kw+"%")
 	}
 	return db.Where(strings.Join(conds, " OR "), args...)

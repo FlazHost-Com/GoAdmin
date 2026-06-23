@@ -1,29 +1,38 @@
 {{define "roles/form"}}{{template "admin/head" .}}
-<form method="post" action="{{.action}}" class="max-w-2xl bg-white rounded-xl shadow p-6 space-y-5">
-  <input type="hidden" name="_csrf" value="{{._csrf}}">
-  <label class="block">
-    <span class="text-sm text-slate-600">Nama Role</span>
-    <input type="text" name="name" required value="{{if .role}}{{.role.Name}}{{end}}"
-           class="mt-1 w-full border rounded-lg px-3 py-2">
-  </label>
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold text-gray-800">Role Management</h1>
+</div>
 
-  <div>
-    <span class="text-sm text-slate-600">Permissions</span>
-    <div class="mt-2 grid gap-2 sm:grid-cols-2 max-h-72 overflow-auto border rounded-lg p-3">
-      {{range .permissions}}
-      <label class="flex items-center gap-2 text-sm">
-        <input type="checkbox" name="permission_ids" value="{{.ID}}" {{if index $.selected .ID}}checked{{end}}>
-        <span class="font-mono text-xs">{{.Name}}</span>
-      </label>
-      {{else}}
-      <p class="text-slate-400 text-sm">Belum ada permission.</p>
-      {{end}}
+<div class="tw-card p-6">
+  <h2 class="text-lg font-bold mb-4" style="color:var(--primary)">Role Form</h2>
+  <form method="post" action="{{.action}}">
+    <input type="hidden" name="_csrf" value="{{._csrf}}">
+    <div class="mb-3"><label class="form-label fw-semibold">Name</label><input type="text" name="name" required value="{{if .role}}{{.role.Name}}{{end}}" class="form-control"></div>
+    <div class="mb-3"><label class="form-label fw-semibold">Guard</label>
+      <select name="guard_name" class="form-control">
+        <option value="web" {{if .role}}{{if eq .role.GuardName "web"}}selected{{end}}{{else}}selected{{end}}>web</option>
+        <option value="api" {{if .role}}{{if eq .role.GuardName "api"}}selected{{end}}{{end}}>api</option>
+      </select>
     </div>
-  </div>
-
-  <div class="flex gap-2">
-    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium">Simpan</button>
-    <a href="/admin/v1/roles" class="px-5 py-2.5 rounded-lg border border-slate-300">Batal</a>
-  </div>
-</form>
+    <div class="mb-3"><label class="form-label fw-semibold">Status</label>
+      <select name="status" class="form-control">
+        <option value="Active" {{if .role}}{{if eq .role.Status "Active"}}selected{{end}}{{else}}selected{{end}}>Active</option>
+        <option value="Inactive" {{if .role}}{{if eq .role.Status "Inactive"}}selected{{end}}{{end}}>Inactive</option>
+      </select>
+    </div>
+    <div class="mb-3"><label class="form-label fw-semibold">Description</label><input type="text" name="description" value="{{if .role}}{{.role.Description}}{{end}}" class="form-control"></div>
+    <div class="mb-4">
+      <label class="form-label fw-semibold d-block">Permissions</label>
+      <div class="d-flex flex-wrap gap-3 p-2 rounded border" style="max-height:280px;overflow:auto">
+        {{range .permissions}}
+        <label class="d-flex align-items-center gap-2" style="min-width:200px"><input type="checkbox" name="permission_ids" value="{{.ID}}" class="w-4 h-4" {{if index $.selected .ID}}checked{{end}}><span class="font-mono text-sm">{{.Name}}</span></label>
+        {{else}}<span class="text-muted small">Belum ada permission.</span>{{end}}
+      </div>
+    </div>
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-primary-tw px-4 py-2"><i class="fas fa-save me-1"></i> Save</button>
+      <a href="/admin/v1/access/role" class="btn btn-danger px-4 py-2">Back</a>
+    </div>
+  </form>
+</div>
 {{template "admin/foot" .}}{{end}}

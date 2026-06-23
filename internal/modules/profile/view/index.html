@@ -1,58 +1,75 @@
 {{define "profile/index"}}{{template "admin/head" .}}
-<form method="post" action="/admin/v1/profile" enctype="multipart/form-data" class="max-w-2xl bg-white rounded-xl shadow p-6 space-y-5">
-  <input type="hidden" name="_csrf" value="{{._csrf}}">
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold text-gray-800">Profile</h1>
+</div>
 
-  <div class="flex items-center gap-4">
-    {{if .profile.Picture}}
-    <img src="{{.profile.Picture}}" alt="avatar" class="h-16 w-16 rounded-full object-cover border">
-    {{else}}
-    <div class="h-16 w-16 rounded-full bg-slate-200"></div>
-    {{end}}
-    <label class="block">
-      <span class="text-sm text-slate-600">Foto Profil</span>
-      <input type="file" name="picture" accept="image/png,image/jpeg,image/gif,image/webp"
-             class="mt-1 block text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-slate-200 file:px-3 file:py-2">
-      <span class="text-xs text-slate-400">PNG/JPG/GIF/WebP, maks 2MB.</span>
-    </label>
-  </div>
+<div class="tw-card p-6">
+  <h2 class="text-lg font-bold mb-4" style="color:var(--primary)">User Form</h2>
+  <form method="POST" action="/admin/v1/profile/update?_method=PUT" enctype="multipart/form-data">
+    <input type="hidden" name="_csrf" value="{{._csrf}}">
 
-  <div class="grid gap-4 sm:grid-cols-2">
-    <label class="block">
-      <span class="text-sm text-slate-600">Nama</span>
-      <input type="text" name="name" value="{{.profile.Name}}" required class="mt-1 w-full border rounded-lg px-3 py-2">
-    </label>
-    <label class="block">
-      <span class="text-sm text-slate-600">Email</span>
-      <input type="email" name="email" value="{{.profile.Email}}" required class="mt-1 w-full border rounded-lg px-3 py-2">
-    </label>
-    <label class="block">
-      <span class="text-sm text-slate-600">Telepon</span>
-      <input type="text" name="phone" value="{{.profile.Phone}}" class="mt-1 w-full border rounded-lg px-3 py-2">
-    </label>
-    <label class="block">
-      <span class="text-sm text-slate-600">Timezone</span>
-      <input type="text" name="timezone" value="{{.profile.Timezone}}" class="mt-1 w-full border rounded-lg px-3 py-2">
-    </label>
-  </div>
-
-  <div class="border-t pt-5">
-    <p class="text-sm text-slate-500 mb-3">Kosongkan password bila tidak ingin mengubahnya.</p>
-    <div class="grid gap-4 sm:grid-cols-2">
-      <label class="block">
-        <span class="text-sm text-slate-600">Password Baru</span>
-        <input type="password" name="password" class="mt-1 w-full border rounded-lg px-3 py-2" placeholder="••••••••">
-      </label>
-      <label class="block">
-        <span class="text-sm text-slate-600">Konfirmasi Password</span>
-        <input type="password" name="password_confirmation" class="mt-1 w-full border rounded-lg px-3 py-2" placeholder="••••••••">
-      </label>
+    <div class="mb-3">
+      <label for="code" class="form-label fw-semibold">Code</label>
+      <input id="code" type="text" class="form-control {{if index .errors "code"}}is-invalid{{end}}" name="code" value="{{or (index .old "code") .profile.Code}}">
+      {{if index .errors "code"}}<div class="invalid-feedback">{{index .errors "code"}}</div>{{end}}
     </div>
-  </div>
+    <div class="mb-3">
+      <label for="name" class="form-label fw-semibold">Name</label>
+      <input id="name" type="text" class="form-control {{if index .errors "name"}}is-invalid{{end}}" name="name" value="{{or (index .old "name") .profile.Name}}">
+      {{if index .errors "name"}}<div class="invalid-feedback">{{index .errors "name"}}</div>{{end}}
+    </div>
+    <div class="mb-3">
+      <label for="phone" class="form-label fw-semibold">Phone Number</label>
+      <input id="phone" type="text" class="form-control {{if index .errors "phone"}}is-invalid{{end}}" name="phone" value="{{or (index .old "phone") .profile.Phone}}">
+      {{if index .errors "phone"}}<div class="invalid-feedback">{{index .errors "phone"}}</div>{{end}}
+    </div>
+    <div class="mb-3">
+      <label for="email" class="form-label fw-semibold">Email</label>
+      <input id="email" type="email" class="form-control {{if index .errors "email"}}is-invalid{{end}}" name="email" value="{{or (index .old "email") .profile.Email}}">
+      {{if index .errors "email"}}<div class="invalid-feedback">{{index .errors "email"}}</div>{{end}}
+    </div>
+    <div class="mb-3">
+      <label for="timezone" class="form-label fw-semibold">Timezone</label>
+      {{$tz := or (index .old "timezone") .profile.Timezone}}
+      <select id="timezone" name="timezone" class="form-control {{if index .errors "timezone"}}is-invalid{{end}}">
+        {{range .timezones}}<option value="{{.}}" {{if eq . $tz}}selected{{end}}>{{.}}</option>{{end}}
+      </select>
+      {{if index .errors "timezone"}}<div class="invalid-feedback">{{index .errors "timezone"}}</div>{{end}}
+    </div>
+    <div class="mb-3">
+      <label for="password" class="form-label fw-semibold">Password</label>
+      <input id="password" type="password" class="form-control {{if index .errors "password"}}is-invalid{{end}}" name="password" value="" autocomplete="off">
+      {{if index .errors "password"}}<div class="invalid-feedback">{{index .errors "password"}}</div>{{end}}
+    </div>
+    <div class="mb-3">
+      <label for="password_confirmation" class="form-label fw-semibold">Password Confirm</label>
+      <input id="password_confirmation" type="password" class="form-control {{if index .errors "password_confirmation"}}is-invalid{{end}}" name="password_confirmation" value="">
+      {{if index .errors "password_confirmation"}}<div class="invalid-feedback">{{index .errors "password_confirmation"}}</div>{{end}}
+    </div>
+    <div class="mb-3">
+      <label for="status" class="form-label fw-semibold">Status</label>
+      {{$st := or (index .old "status") .profile.Status}}
+      <select name="status" id="status" class="form-control {{if index .errors "status"}}is-invalid{{end}}">
+        <option value="Active" {{if eq $st "Active"}}selected{{end}}>Active</option>
+        <option value="Inactive" {{if eq $st "Inactive"}}selected{{end}}>Inactive</option>
+      </select>
+      {{if index .errors "status"}}<div class="invalid-feedback">{{index .errors "status"}}</div>{{end}}
+    </div>
+    <div class="mb-4">
+      <label for="picture" class="form-label fw-semibold">Picture</label>
+      <div class="d-flex align-items-center gap-3">
+        <img id="picturePreview" src="{{.profile.Picture}}" width="90" height="90" class="rounded border p-1" style="object-fit:contain;background:#f8fafc" alt="picture">
+        <input id="picture" type="file" name="picture" accept="image/*" class="form-control {{if index .errors "picture"}}is-invalid{{end}}">
+      </div>
+      {{if index .errors "picture"}}<div class="text-danger small mt-1">{{index .errors "picture"}}</div>{{end}}
+    </div>
 
-  <div>
-    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium">
-      Simpan
-    </button>
-  </div>
-</form>
+    <button type="submit" class="btn btn-primary-tw px-4 py-2"><i class="fas fa-save me-1"></i> Save</button>
+  </form>
+</div>
+
+<script>
+  // Preview gambar sebelum submit (sama dengan File Upload di UI Components).
+  (function(){ var inp=document.getElementById('picture'), prev=document.getElementById('picturePreview'); if(!inp||!prev) return; inp.addEventListener('change', function(){ var f=this.files&&this.files[0]; if(f&&f.type.startsWith('image/')){ prev.src=URL.createObjectURL(f); prev.style.visibility='visible'; } }); })();
+</script>
 {{template "admin/foot" .}}{{end}}

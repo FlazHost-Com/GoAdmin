@@ -1,7 +1,7 @@
 # Makefile GoAdmin — entrypoint task lokal & CI.
 # Padanan script npm di NodeAdmin (lint:conventions, test, dll).
 
-.PHONY: check lint test build run vet tidy verify module migrate
+.PHONY: check lint test build run vet tidy verify module migrate migration
 
 # module = scaffold modul CRUD baru (otomatis ikut pola `access` + lolos checker).
 # Contoh:
@@ -28,10 +28,17 @@ test:
 build:
 	@go build ./...
 
-# migrate = AutoMigrate semua modul + seed admin (dev). Contoh:
-#   APP_MODE=full DB_TYPE=sqlite DB_DATABASE=goadmin.db make migrate
+# migrate = migrasi DB. sqlite → AutoMigrate (dev); mysql/postgres → golang-migrate
+# versioned (.up/.down SQL). Contoh:
+#   DB_TYPE=sqlite DB_DATABASE=goadmin.db make migrate     # up + seed
+#   make migrate ARGS="-down 1"     # rollback (mysql/postgres)
+#   make migrate ARGS="-version"    # versi saat ini
 migrate:
 	@go run ./cmd/migrate $(ARGS)
+
+# migration = buat pasangan file migrasi baru. Contoh: make migration name=add_orders
+migration:
+	@go run ./cmd/migrate -create "$(name)"
 
 # run = jalankan server.
 run:

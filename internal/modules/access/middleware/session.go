@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	apperr "goadmin/internal/errors"
+	"goadmin/internal/router"
 )
 
 // SessionUserKey = kunci penyimpanan user id di sesi web.
@@ -34,12 +35,15 @@ func (g *Guard) EnsureAuthenticatedWeb(loginPath string) gin.HandlerFunc {
 	}
 }
 
-// AuthorizeWeb = RBAC untuk jalur web (render 403 lewat error terpusat).
-func AuthorizeWeb(permission string) gin.HandlerFunc {
+// AuthorizeWeb = RBAC route-driven untuk jalur web (a la NodeAdmin
+// AccessMiddleware; render 403 lewat error terpusat). Nama route + method
+// diturunkan dari request berjalan — TANPA argumen subjek. Administrator bypass.
+func AuthorizeWeb() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		user := UserFrom(c)
-		if user == nil || !user.HasAccess(permission) {
-			c.Error(apperr.Forbidden("Anda tidak memiliki izin: " + permission))
+		name := router.NameByMethodPath(c.Request.Method, c.FullPath())
+		if user == nil || !user.HasAccess(name, c.Request.Method) {
+			c.Error(apperr.Forbidden("Anda tidak memiliki izin untuk aksi ini"))
 			c.Abort()
 			return
 		}

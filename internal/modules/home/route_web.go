@@ -8,36 +8,30 @@ import (
 	webctl "goadmin/internal/modules/home/controller/web"
 	"goadmin/internal/modules/home/fetemplate"
 	"goadmin/internal/modules/home/service"
-	settingsvc "goadmin/internal/modules/setting/service"
 )
 
-// registerWebRoutes memasang landing publik + halaman admin pemilih template.
+// registerWebRoutes memasang landing publik + proxy pratinjau template FE.
+// CATATAN: switcher template frontend DI-FOLD ke halaman Setting (persis
+// NodeAdmin) — TIDAK ada halaman "appearance" terpisah. Pemilihan disimpan via
+// form Setting (PUT /admin/v1/setting/update, hidden fe_template). Yang tersisa
+// di sini hanya proxy pratinjau, bernama `admin.v1.setting.fe_preview`.
 func registerWebRoutes(ctx *router.RegistrationContext, svc service.IHomeService, fe *fetemplate.Service) {
 	c := ctx.Container
 
 	// --- Landing publik ('/' render langsung; '/home' alias) ---
 	ctl := webctl.NewHomeController(svc, fe)
 	ctx.Web.GET("/", ctl.Index)
-	router.Register("web.home.root", "/")
+	router.Register("GET", "web.home.root", "/")
 	ctx.Web.GET("/home", ctl.Index)
-	router.Register("web.home.index", "/home")
+	router.Register("GET", "web.home.index", "/home")
 
-	// --- Admin: pemilih template (membaca/menyetel Setting.fe_template, lazy) ---
+	// --- Admin: proxy pratinjau template FE (thumbnail/modal di halaman Setting).
+	// Namespace `setting` (folded), BUKAN modul appearance terpisah. ---
 	authSvc, _ := c.Resolve("access.IAuthService").(accesssvc.IAuthService)
-	settingsProvider := func() settingsvc.ISettingService {
-		s, _ := c.Resolve("setting.ISettingService").(settingsvc.ISettingService)
-		return s
-	}
-	appCtl := webctl.NewAppearanceController(settingsProvider, fe)
-
 	jwtless := accessmw.NewGuardWebOnly(authSvc)
 	admin := ctx.Web.Group("/admin/v1")
 	admin.Use(jwtless.EnsureAuthenticatedWeb("/auth/login"))
 
-	admin.GET("/appearance", accessmw.AuthorizeWeb("setting.view"), appCtl.Index)
-	router.Register("admin.v1.appearance.index", "/admin/v1/appearance")
-	admin.POST("/appearance", accessmw.AuthorizeWeb("setting.update"), appCtl.Apply)
-	// Proxy pratinjau template (iframe thumbnail/modal).
-	admin.GET("/appearance/preview/:slug", accessmw.AuthorizeWeb("setting.view"), ctl.Preview)
-	router.Register("admin.v1.appearance.preview", "/admin/v1/appearance/preview/:slug")
+	admin.GET("/setting/fe-preview/:slug", accessmw.AuthorizeWeb(), ctl.Preview)
+	router.Register("GET", "admin.v1.setting.fe_preview", "/admin/v1/setting/fe-preview/:slug")
 }

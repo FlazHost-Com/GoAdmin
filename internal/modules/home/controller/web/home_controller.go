@@ -35,7 +35,7 @@ func (ctl *HomeController) Index(c *gin.Context) {
 	}
 
 	if fetemplate.IsBuiltin(landing.Template) {
-		view.RenderView(c, "home/"+landing.Template, gin.H{
+		view.RenderView(c, "home/"+fetemplate.BuiltinView(landing.Template), gin.H{
 			"title":   landing.AppName,
 			"landing": landing,
 		})
@@ -45,7 +45,7 @@ func (ctl *HomeController) Index(c *gin.Context) {
 	// Eksternal: sajikan HTML mentah ter-cache (fallback ke builtin default).
 	html, herr := ctl.fe.ActiveHTML(c.Request.Context(), landing.Template)
 	if herr != nil {
-		view.RenderView(c, "home/"+fetemplate.DefaultSlug, gin.H{
+		view.RenderView(c, "home/"+fetemplate.BuiltinView(fetemplate.DefaultSlug), gin.H{
 			"title":   landing.AppName,
 			"landing": landing,
 		})
@@ -54,7 +54,7 @@ func (ctl *HomeController) Index(c *gin.Context) {
 	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(html))
 }
 
-// Preview → GET /admin/v1/appearance/preview/:slug (admin). Mengembalikan HTML
+// Preview → GET /admin/v1/setting/fe-preview/:slug (admin; thumbnail/modal Setting). Mengembalikan HTML
 // satu template untuk dirender di iframe (thumbnail/modal). Builtin → Go view;
 // eksternal → HTML proxy (cache lokal → upstream); gagal → placeholder ramah.
 func (ctl *HomeController) Preview(c *gin.Context) {
@@ -70,7 +70,7 @@ func (ctl *HomeController) Preview(c *gin.Context) {
 			c.Error(err)
 			return
 		}
-		view.RenderView(c, "home/"+slug, gin.H{"title": landing.AppName, "landing": landing})
+		view.RenderView(c, "home/"+fetemplate.BuiltinView(slug), gin.H{"title": landing.AppName, "landing": landing})
 		return
 	}
 

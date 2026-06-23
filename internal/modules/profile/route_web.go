@@ -25,8 +25,8 @@ func registerWebRoutes(ctx *router.RegistrationContext) {
 	admin.Use(jwtless.EnsureAuthenticatedWeb("/auth/login"))
 
 	admin.GET("/profile", ctl.Index)
-	router.Register("admin.v1.profile.index", "/admin/v1/profile")
+	router.Register("GET", "admin.v1.profile.index", "/admin/v1/profile")
 
-	admin.POST("/profile", ctl.Update)
-	router.Register("admin.v1.profile.update", "/admin/v1/profile")
+	admin.PUT("/profile/update", ctl.Update)
+	router.Register("PUT", "admin.v1.profile.update", "/admin/v1/profile/update")
 }

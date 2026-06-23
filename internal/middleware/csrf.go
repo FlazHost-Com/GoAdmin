@@ -34,7 +34,14 @@ func CSRF() gin.HandlerFunc {
 		c.Set(csrfCtxKey, token)
 
 		if isUnsafeMethod(c.Request.Method) {
+			// Sumber token (urut): body form → query → header. Query WAJIB jadi
+			// fallback karena net/http hanya mem-parse body form untuk
+			// POST/PUT/PATCH — BUKAN DELETE; jadi form delete (POST + ?_method=
+			// DELETE) menaruh _csrf di query. Sejajar NodeAdmin (body||query||header).
 			submitted := c.PostForm(csrfFieldName)
+			if submitted == "" {
+				submitted = c.Query(csrfFieldName)
+			}
 			if submitted == "" {
 				submitted = c.GetHeader(csrfHeaderName)
 			}

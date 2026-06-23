@@ -24,52 +24,63 @@ Paginasi (list): query `page`, `per_page`, `search`; `data` berisi `{ data: [...
 | Method | Path | Auth | Keterangan |
 |---|---|---|---|
 | POST | `/api/v1/auth/login` | publik | body `{ email, password }` → `{ token, user }` |
-| POST | `/api/v1/auth/logout` | JWT | cabut token saat ini (blacklist) |
+| POST | `/api/v1/auth/register` | publik (rate-limit) | `{ name, email, password }` → user dibuat |
+| POST | `/api/v1/auth/reset/request` | publik (rate-limit) | `{ email }` → kirim OTP (anti user-enumeration) |
+| POST | `/api/v1/auth/reset/process` | publik (rate-limit) | `{ email, otp, password }` → set password baru |
+| POST | `/api/v1/auth/logout` | JWT | cabut token saat ini (blacklist) — POST (mutasi) |
 | GET | `/api/v1/auth/me` | JWT | profil user dari token |
 
 ## Users — RBAC `user.*`
 
 | Method | Path | Permission | Body |
 |---|---|---|---|
-| GET | `/api/v1/users` | `user.view` | — (query: page/per_page/search) |
-| GET | `/api/v1/users/:id` | `user.view` | — |
-| POST | `/api/v1/users` | `user.create` | `{ name, email, phone?, password, status?, timezone?, role_ids?[] }` |
-| PUT | `/api/v1/users/:id` | `user.update` | sama, `password` opsional |
-| DELETE | `/api/v1/users/:id` | `user.delete` | — |
+| GET | `/api/v1/access/user` | `user.view` | — (query: page/per_page/search) |
+| POST | `/api/v1/access/user/store` | `user.create` | `{ name, email, phone?, password, status?, timezone?, role_ids?[] }` |
+| GET | `/api/v1/access/user/:id/edit` | `user.view` | — (entity utk edit) |
+| PUT | `/api/v1/access/user/:id/update` | `user.update` | sama, `password` opsional |
+| DELETE | `/api/v1/access/user/:id/delete` | `user.delete` | — |
+| POST | `/api/v1/access/user/delete_selected` | `user.delete` | `{ selected: [id,...] }` |
 
 ## Roles — RBAC `role.*`
 
 | Method | Path | Permission | Body |
 |---|---|---|---|
-| GET | `/api/v1/roles` | `role.view` | — |
-| GET | `/api/v1/roles/:id` | `role.view` | — |
-| POST | `/api/v1/roles` | `role.create` | `{ name, permission_ids?[] }` |
-| PUT | `/api/v1/roles/:id` | `role.update` | `{ name, permission_ids?[] }` |
-| DELETE | `/api/v1/roles/:id` | `role.delete` | — (role Administrator ditolak) |
+| GET | `/api/v1/access/role` | `role.view` | — |
+| POST | `/api/v1/access/role/store` | `role.create` | `{ name, permission_ids?[] }` |
+| GET | `/api/v1/access/role/:id/edit` | `role.view` | — (entity utk edit) |
+| PUT | `/api/v1/access/role/:id/update` | `role.update` | `{ name, permission_ids?[] }` |
+| DELETE | `/api/v1/access/role/:id/delete` | `role.delete` | — (role Administrator ditolak) |
+| POST | `/api/v1/access/role/delete_selected` | `role.delete` | `{ selected: [id,...] }` |
+| GET | `/api/v1/access/role/:id/permission` | (route-driven) | — daftar permission + status assigned (filter `q_name`/`q_status`/`q_desc`) |
+| GET | `/api/v1/access/role/:id/permission/:permission_id/assign` | (route-driven) | — assign 1 permission |
+| POST | `/api/v1/access/role/:id/permission/assign_selected` | (route-driven) | `{ selected: [id,...] }` |
+| GET | `/api/v1/access/role/:id/permission/:permission_id/unassign` | (route-driven) | — unassign 1 permission |
+| POST | `/api/v1/access/role/:id/permission/unassign_selected` | (route-driven) | `{ selected: [id,...] }` |
 
 ## Permissions — RBAC `permission.*`
 
 | Method | Path | Permission | Body |
 |---|---|---|---|
-| GET | `/api/v1/permissions` | `permission.view` | — |
-| GET | `/api/v1/permissions/:id` | `permission.view` | — |
-| POST | `/api/v1/permissions` | `permission.create` | `{ name }` |
-| PUT | `/api/v1/permissions/:id` | `permission.update` | `{ name }` |
-| DELETE | `/api/v1/permissions/:id` | `permission.delete` | — |
+| GET | `/api/v1/access/permission` | `permission.view` | — |
+| POST | `/api/v1/access/permission/store` | `permission.create` | `{ name }` |
+| GET | `/api/v1/access/permission/:id/edit` | `permission.view` | — (entity utk edit) |
+| PUT | `/api/v1/access/permission/:id/update` | `permission.update` | `{ name }` |
+| DELETE | `/api/v1/access/permission/:id/delete` | `permission.delete` | — |
+| POST | `/api/v1/access/permission/delete_selected` | `permission.delete` | `{ selected: [id,...] }` |
 
 ## Setting — RBAC `setting.*`
 
 | Method | Path | Permission | Body |
 |---|---|---|---|
 | GET | `/api/v1/setting` | `setting.view` | — → `{ setting, themes }` |
-| PUT | `/api/v1/setting` | `setting.update` | `{ name?, initial?, description?, phone?, address?, email?, copyright?, theme?, fe_template? }` (parsial) |
+| PUT | `/api/v1/setting/update` | `setting.update` | `{ name?, initial?, description?, phone?, address?, email?, copyright?, theme?, fe_template? }` (parsial) |
 
 ## Profile — JWT (tanpa permission khusus)
 
 | Method | Path | Auth | Body |
 |---|---|---|---|
 | GET | `/api/v1/profile` | JWT | — |
-| PUT | `/api/v1/profile` | JWT | `{ name, email, phone?, timezone?, password?, password_confirmation? }` |
+| PUT | `/api/v1/profile/update` | JWT | `{ name, email, phone?, timezone?, password?, password_confirmation? }` |
 
 > Profil least-privilege: tak bisa mengubah status/role sendiri.
 
@@ -77,7 +88,7 @@ Paginasi (list): query `page`, `per_page`, `search`; `data` berisi `{ data: [...
 
 | Method | Path | Auth | Keterangan |
 |---|---|---|---|
-| GET | `/api/v1/dashboard/stats` | JWT | `{ users, roles, permissions }` |
+| GET | `/api/v1/dashboard` | JWT | `{ users, roles, permissions }` |
 
 ## Lain-lain
 
@@ -97,5 +108,5 @@ curl -s -X POST http://localhost:3000/api/v1/auth/login \
 
 # Pakai token
 TOKEN=... # dari data.token di atas
-curl -s http://localhost:3000/api/v1/users -H "Authorization: Bearer $TOKEN"
+curl -s http://localhost:3000/api/v1/access/user -H "Authorization: Bearer $TOKEN"
 ```

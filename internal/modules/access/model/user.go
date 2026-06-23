@@ -50,14 +50,16 @@ func (u *User) IsAdministrator() bool {
 	return false
 }
 
-// HasAccess true bila user (lewat salah satu role) memiliki permission bernama
-// tertentu. Administrator selalu true (bypass).
-func (u *User) HasAccess(permission string) bool {
+// HasAccess true bila user (lewat salah satu role) memiliki permission untuk
+// route bernama `name` + HTTP `method` (model route-driven a la NodeAdmin:
+// permission.name == nama-route DAN permission.method == method). Administrator
+// selalu true (bypass).
+func (u *User) HasAccess(name, method string) bool {
 	if u.IsAdministrator() {
 		return true
 	}
 	for _, r := range u.Roles {
-		if r.HasPermission(permission) {
+		if r.HasPermission(name, method) {
 			return true
 		}
 	}

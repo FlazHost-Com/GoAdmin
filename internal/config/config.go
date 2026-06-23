@@ -110,8 +110,10 @@ type StorageConfig struct {
 }
 
 // FeTemplateConfig = frontend template switcher (katalog landing eksternal).
-// Remote=false (default) → hanya katalog kurasi statis (tanpa jaringan, aman CI).
-// Remote=true → fetch daftar dari TreeURL + unduh HTML on-demand dari RawBaseURL.
+// Remote=true (DEFAULT, sejajar NodeAdmin yang selalu mem-fetch) → fetch daftar
+// 640 landing dari TreeURL (lazy, sekali, di-cache) + unduh HTML on-demand dari
+// RawBaseURL; gagal/offline → fallback ke katalog kurasi (15). Set false untuk
+// memaksa offline (hanya kurasi) — mis. lingkungan air-gapped/CI tanpa jaringan.
 type FeTemplateConfig struct {
 	Remote     bool
 	TreeURL    string
@@ -233,7 +235,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("CORS_ORIGINS", "")
 	v.SetDefault("SMTP_PORT", 587)
 	v.SetDefault("SMTP_FROM", "no-reply@goadmin.local")
-	v.SetDefault("FE_TEMPLATE_REMOTE", false)
+	v.SetDefault("FE_TEMPLATE_REMOTE", true)
 	v.SetDefault("FE_TEMPLATE_TREE_URL", "https://api.github.com/repos/lindoai/opentailwind/git/trees/master?recursive=1")
 	v.SetDefault("FE_TEMPLATE_RAW_URL", "https://raw.githubusercontent.com/lindoai/opentailwind/master/landings")
 	v.SetDefault("FE_TEMPLATE_CACHE_DIR", "web/cache/fetemplates")

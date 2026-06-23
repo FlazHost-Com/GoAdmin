@@ -17,8 +17,8 @@ func NewDashboardController(dashboard service.IDashboardService) *DashboardContr
 	return &DashboardController{dashboard: dashboard}
 }
 
-// Stats → GET /api/v1/dashboard/stats.
-func (ctl *DashboardController) Stats(c *gin.Context) {
+// Index → GET /api/v1/dashboard.
+func (ctl *DashboardController) Index(c *gin.Context) {
 	stats, err := ctl.dashboard.Stats(c.Request.Context())
 	if err != nil {
 		c.Error(err)

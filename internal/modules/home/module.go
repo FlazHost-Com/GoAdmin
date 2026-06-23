@@ -43,6 +43,9 @@ func (m *Module) Register(ctx *router.RegistrationContext) {
 		fetcher = fetemplate.NewHTTPFetcher(cfg.FeTemplate.TreeURL, cfg.FeTemplate.RawBaseURL)
 	}
 	fe := fetemplate.New(fetcher, cfg.FeTemplate.CacheDir)
+	// Bagikan ke container agar modul setting (terdaftar SETELAH home) bisa
+	// menyematkan switcher template frontend di halaman Setting.
+	c.Provide("home.fetemplate", fe)
 
 	registerWebRoutes(ctx, svc, fe)
 }

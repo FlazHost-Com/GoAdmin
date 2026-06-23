@@ -113,7 +113,9 @@ func applyUpdate(s *model.Setting, in dto.UpdateSettingInput) {
 		s.Name = in.Name
 	}
 	if in.Description != "" {
-		s.Description = in.Description
+		// Deskripsi = HTML rich-text (Trumbowyg) → sanitasi sebelum simpan (anti XSS),
+		// padanan cleanRichText NodeAdmin. Disimpan & dirender mentah di landing.
+		s.Description = helpers.CleanRichText(in.Description)
 	}
 	if in.Phone != "" {
 		s.Phone = in.Phone
@@ -127,8 +129,14 @@ func applyUpdate(s *model.Setting, in dto.UpdateSettingInput) {
 	if in.Copyright != "" {
 		s.Copyright = in.Copyright
 	}
+	if in.Icon != "" {
+		s.Icon = in.Icon
+	}
 	if in.Logo != "" {
 		s.Logo = in.Logo
+	}
+	if in.LoginImage != "" {
+		s.LoginImage = in.LoginImage
 	}
 	if in.Theme != "" {
 		s.Theme = in.Theme

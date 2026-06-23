@@ -21,7 +21,7 @@ func NewProfileController(profiles service.IProfileService) *ProfileController {
 }
 
 // Show → GET /api/v1/profile (profil user dari token).
-func (ctl *ProfileController) Show(c *gin.Context) {
+func (ctl *ProfileController) Index(c *gin.Context) {
 	user := accessmw.UserFrom(c)
 	if user == nil {
 		c.Error(apperr.Unauthorized("Belum terautentikasi"))

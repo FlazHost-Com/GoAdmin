@@ -20,6 +20,7 @@ import (
 	"gorm.io/gorm"
 
 	"goadmin/internal/app"
+	"goadmin/internal/middleware"
 	"goadmin/internal/bootstrap"
 	"goadmin/internal/config"
 	"goadmin/internal/container"
@@ -54,10 +55,21 @@ func main() {
 	c := container.New(cfg, db, rdb)
 	engine := app.Build(c)
 
+	// Permission route-driven: setelah route terdaftar (app.Build mengisi
+	// registry), turunkan permission dari registry agar tersedia untuk
+	// assignment role (a la NodeAdmin). Dev saja; prod pakai migrasi versioned.
+	if !cfg.IsProd {
+		if err := bootstrap.SyncPermissions(db); err != nil {
+			log.Printf("WARN sync permission dari route: %v", err)
+		}
+	}
+
 	addr := fmt.Sprintf(":%d", cfg.App.Port)
 	srv := &http.Server{
-		Addr:              addr,
-		Handler:           engine,
+		Addr: addr,
+		// MethodOverride: form `?_method=PUT/DELETE` → ubah method SEBELUM Gin
+		// me-routing (sejajar NodeAdmin). Membungkus engine di level server.
+		Handler:           middleware.MethodOverride(engine),
 		ReadHeaderTimeout: 10 * time.Second,
 	}
 

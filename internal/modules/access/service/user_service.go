@@ -33,6 +33,25 @@ func (s *UserService) Index(ctx context.Context, q dto.ListQuery) (helpers.Pagin
 	if q.Search != "" {
 		query = helpers.CiLikeAny(query, []string{"name", "email", "code"}, q.Search)
 	}
+	// Filter per-kolom (replika tabel index NodeAdmin).
+	if q.QCode != "" {
+		query = helpers.CiLike(query, "code", q.QCode)
+	}
+	if q.QName != "" {
+		query = helpers.CiLike(query, "name", q.QName)
+	}
+	if q.QPhone != "" {
+		query = helpers.CiLike(query, "phone", q.QPhone)
+	}
+	if q.QEmail != "" {
+		query = helpers.CiLike(query, "email", q.QEmail)
+	}
+	if q.QStatus != "" {
+		query = query.Where("status = ?", q.QStatus)
+	}
+	if q.QRole != "" {
+		query = query.Where("id IN (SELECT user_id FROM users_roles WHERE role_id = ?)", q.QRole)
+	}
 	query = query.Order("created_at DESC").Preload("Roles")
 
 	var users []model.User
@@ -79,16 +98,18 @@ func (s *UserService) Store(ctx context.Context, in dto.CreateUserInput, actorID
 	}
 
 	user := model.User{
-		ID:        helpers.NewID(),
-		Code:      helpers.NewCode("U"),
-		Name:      in.Name,
-		Email:     in.Email,
-		Phone:     in.Phone,
-		Password:  hash,
-		Status:    status,
-		Timezone:  tz,
-		Picture:   in.Picture,
-		CreatedBy: actorID,
+		ID:            helpers.NewID(),
+		Code:          helpers.NewCode("U"),
+		Name:          in.Name,
+		Email:         in.Email,
+		Phone:         in.Phone,
+		Password:      hash,
+		Status:        status,
+		Timezone:      tz,
+		Picture:       in.Picture,
+		Blocked:       in.Blocked,
+		BlockedReason: in.BlockedReason,
+		CreatedBy:     actorID,
 	}
 
 	err = s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
@@ -133,6 +154,9 @@ func (s *UserService) Update(ctx context.Context, id string, in dto.UpdateUserIn
 	if in.Picture != "" {
 		user.Picture = in.Picture
 	}
+	// Blocked = checkbox: set langsung (centang→true, kosong→false).
+	user.Blocked = in.Blocked
+	user.BlockedReason = in.BlockedReason
 	user.UpdatedBy = actorID
 
 	// Password hanya diubah bila diisi.
@@ -162,6 +186,18 @@ func (s *UserService) Destroy(ctx context.Context, id string) error {
 		return err
 	}
 	if err := s.db.WithContext(ctx).Select("Roles").Delete(user).Error; err != nil {
+		return apperr.Internal(err.Error())
+	}
+	return nil
+}
+
+// DestroyMany menghapus banyak user sekaligus (aksi "Delete Selected" tabel).
+// Relasi role ikut dibersihkan via Select("Roles").
+func (s *UserService) DestroyMany(ctx context.Context, ids []string) error {
+	if len(ids) == 0 {
+		return nil
+	}
+	if err := s.db.WithContext(ctx).Select("Roles").Delete(&model.User{}, "id IN ?", ids).Error; err != nil {
 		return apperr.Internal(err.Error())
 	}
 	return nil

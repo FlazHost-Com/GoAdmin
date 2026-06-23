@@ -1,14 +1,41 @@
 {{define "permissions/form"}}{{template "admin/head" .}}
-<form method="post" action="{{.action}}" class="max-w-xl bg-white rounded-xl shadow p-6 space-y-5">
-  <input type="hidden" name="_csrf" value="{{._csrf}}">
-  <label class="block">
-    <span class="text-sm text-slate-600">Nama Permission</span>
-    <input type="text" name="name" required value="{{if .permission}}{{.permission.Name}}{{end}}"
-           placeholder="mis. user.view" class="mt-1 w-full border rounded-lg px-3 py-2 font-mono text-sm">
-  </label>
-  <div class="flex gap-2">
-    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium">Simpan</button>
-    <a href="/admin/v1/permissions" class="px-5 py-2.5 rounded-lg border border-slate-300">Batal</a>
-  </div>
-</form>
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold text-gray-800">Permission Management</h1>
+</div>
+
+<div class="tw-card p-6">
+  <h2 class="text-lg font-bold mb-4" style="color:var(--primary)">Permission Form</h2>
+  <form method="post" action="{{.action}}">
+    <input type="hidden" name="_csrf" value="{{._csrf}}">
+    <div class="mb-3"><label class="form-label fw-semibold">Name</label><input type="text" name="name" required value="{{if .permission}}{{.permission.Name}}{{end}}" placeholder="mis. user.view" class="form-control font-mono"></div>
+    <div class="mb-3"><label class="form-label fw-semibold">Guard</label>
+      <select name="guard_name" class="form-control">
+        <option value="web" {{if .permission}}{{if eq .permission.GuardName "web"}}selected{{end}}{{else}}selected{{end}}>web</option>
+        <option value="api" {{if .permission}}{{if eq .permission.GuardName "api"}}selected{{end}}{{end}}>api</option>
+      </select>
+    </div>
+    <div class="mb-3"><label class="form-label fw-semibold">Method</label>
+      <select name="method" class="form-control">
+        <option value="">—</option>
+        {{$m := ""}}{{if .permission}}{{$m = .permission.Method}}{{end}}
+        <option value="GET" {{if eq $m "GET"}}selected{{end}}>GET</option>
+        <option value="POST" {{if eq $m "POST"}}selected{{end}}>POST</option>
+        <option value="PATCH" {{if eq $m "PATCH"}}selected{{end}}>PATCH</option>
+        <option value="PUT" {{if eq $m "PUT"}}selected{{end}}>PUT</option>
+        <option value="DELETE" {{if eq $m "DELETE"}}selected{{end}}>DELETE</option>
+      </select>
+    </div>
+    <div class="mb-3"><label class="form-label fw-semibold">Status</label>
+      <select name="status" class="form-control">
+        <option value="Active" {{if .permission}}{{if eq .permission.Status "Active"}}selected{{end}}{{else}}selected{{end}}>Active</option>
+        <option value="Inactive" {{if .permission}}{{if eq .permission.Status "Inactive"}}selected{{end}}{{end}}>Inactive</option>
+      </select>
+    </div>
+    <div class="mb-4"><label class="form-label fw-semibold">Description</label><input type="text" name="description" value="{{if .permission}}{{.permission.Description}}{{end}}" class="form-control"></div>
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-primary-tw px-4 py-2"><i class="fas fa-save me-1"></i> Save</button>
+      <a href="/admin/v1/access/permission" class="btn btn-danger px-4 py-2">Back</a>
+    </div>
+  </form>
+</div>
 {{template "admin/foot" .}}{{end}}

@@ -33,7 +33,7 @@ func (f *fakeFetcher) HTML(_ context.Context, _ string) (string, error) {
 
 // IsValidSlug = gerbang anti-SSRF: builtin & pola opentailwind lolos; lainnya tidak.
 func TestFeTemplate_SlugValidation(t *testing.T) {
-	ok := []string{"default", "minimal", "agency-consulting-002-creative-agency", "technology-saas-001-hero"}
+	ok := []string{fetemplate.DefaultSlug, "agency-consulting-002-creative-agency", "technology-saas-001-hero", "fitness-sports-001-fitness-center"}
 	bad := []string{"../etc/passwd", "http://evil", "Foo", "bar", "no-number-here", "a/b"}
 	for _, s := range ok {
 		if !fetemplate.IsValidSlug(s) {
@@ -54,8 +54,8 @@ func TestFeTemplate_CatalogFallback(t *testing.T) {
 	if len(cat) < 3 {
 		t.Fatalf("katalog terlalu sedikit: %d", len(cat))
 	}
-	// Builtin di depan.
-	if !cat[0].Builtin || cat[0].Slug != "default" {
+	// Builtin (default = Creative Agency) di depan.
+	if !cat[0].Builtin || cat[0].Slug != fetemplate.DefaultSlug {
 		t.Fatalf("builtin harus di depan, dapat %+v", cat[0])
 	}
 }
@@ -65,9 +65,10 @@ func TestFeTemplate_PaginatePinAndSearch(t *testing.T) {
 	svc := fetemplate.New(nil, t.TempDir())
 	ctx := context.Background()
 
-	// Pin 'minimal' → item pertama.
-	items, total := svc.Paginate(ctx, "", "", 1, 3, "minimal")
-	if total < 3 || items[0].Slug != "minimal" {
+	// Pin slug kurasi → item pertama.
+	pin := "travel-tourism-001-travel-agency"
+	items, total := svc.Paginate(ctx, "", "", 1, 3, pin)
+	if total < 3 || items[0].Slug != pin {
 		t.Fatalf("pin gagal: first=%s total=%d", items[0].Slug, total)
 	}
 
@@ -88,13 +89,14 @@ func TestFeTemplate_EnsureGate(t *testing.T) {
 	svc := fetemplate.New(nil, t.TempDir())
 	ctx := context.Background()
 
-	if err := svc.Ensure(ctx, "default"); err != nil {
+	if err := svc.Ensure(ctx, fetemplate.DefaultSlug); err != nil {
 		t.Fatalf("builtin harus no-op: %v", err)
 	}
 	if err := svc.Ensure(ctx, "../evil"); err == nil {
 		t.Fatal("slug invalid harus ditolak")
 	}
-	err := svc.Ensure(ctx, "agency-consulting-002-creative-agency")
+	// Slug eksternal (bukan builtin) tanpa fetcher → 502.
+	err := svc.Ensure(ctx, "technology-saas-002-feature-rich-multi-section")
 	if ae, ok := apperr.As(err); !ok || ae.Status != 502 {
 		t.Fatalf("tanpa remote harus 502, dapat: %v", err)
 	}

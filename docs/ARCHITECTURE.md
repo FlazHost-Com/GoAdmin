@@ -58,6 +58,15 @@ Dipilih runtime via `APP_MODE`:
 
 Diff antar-varian **purely-additive**: file shared identik, cabang lewat env/guard runtime — bukan dua project terpisah.
 
+## Migrasi DB
+
+Dua jalur, sesuai konteks (selaras `PORTING_GUIDE`):
+
+- **Dev/test** — **AutoMigrate** GORM dari model (`internal/modules/*/migration/automigrate.go`, diagregasi `internal/bootstrap`). Cepat, dipakai `cmd/server` saat dev & `testutil`. SQLite in-memory.
+- **Produksi** — **golang-migrate** versioned + **reversible**: file SQL `.up/.down` portabel di `internal/migrate/migrations/` (di-embed), dijalankan `cmd/migrate` untuk **mysql/postgres** (riwayat versi + rollback). Generator: `make migration name=...`.
+
+`cmd/migrate` dialect-aware: sqlite → AutoMigrate; mysql/postgres → golang-migrate `up` (default) / `-down N` / `-force V` / `-version`. CI matrix menguji migrasi nyata di MySQL+Postgres (up→down→up). Portabilitas SQL juga diuji di SQLite (`tests/integration/migrate_test.go`).
+
 ## Keamanan (ringkas)
 
 Security headers, CSRF (form web; API JWT dikecualikan), rate-limit login per-IP, RBAC `auth → authorize`, bcrypt, JWT HS256 + blacklist logout, cookie `HttpOnly`/`Secure`(prod), secret fail-fast, error generik di production. Detail di [`AGENTS.md`](../AGENTS.md) (Security Checklist).

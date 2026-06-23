@@ -34,8 +34,9 @@ jobs:
       - name: Test
         run: go test ./... -count=1
 
-  # Matrix portabilitas: jalankan migrasi (AutoMigrate) terhadap MySQL & Postgres
-  # nyata → membuktikan skema/model portabel lintas dialek (bukan cuma SQLite).
+  # Matrix portabilitas: jalankan migrasi VERSIONED (golang-migrate, file SQL
+  # .up/.down) terhadap MySQL & Postgres nyata → membuktikan SQL migrasi portabel
+  # lintas dialek + jalur produksi berfungsi (bukan cuma AutoMigrate SQLite).
   db-portability:
     name: Migrate (${{ matrix.db }})
     runs-on: ubuntu-latest
@@ -89,6 +90,12 @@ jobs:
           echo "DB_DATABASE=goadmin"    >> "$GITHUB_ENV"
           echo "NODE_ENV=test"          >> "$GITHUB_ENV"
 
-      # AutoMigrate + seed terhadap DB nyata. Sukses = skema/model portabel.
-      - name: Migrate (${{ matrix.db }})
+      # golang-migrate up (SQL versioned) + seed terhadap DB nyata, lalu down 1
+      # (uji reversibilitas), lalu up lagi. Sukses = migrasi portabel & reversibel.
+      - name: Migrate up + seed (${{ matrix.db }})
         run: go run ./cmd/migrate
+
+      - name: Rollback 1 + re-up (${{ matrix.db }})
+        run: |
+          go run ./cmd/migrate -down 1
+          go run ./cmd/migrate -seed=false

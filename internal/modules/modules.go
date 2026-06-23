@@ -12,6 +12,7 @@ import (
 	_ "goadmin/internal/modules/components"
 	_ "goadmin/internal/modules/dashboard"
 	_ "goadmin/internal/modules/home"
+	_ "goadmin/internal/modules/media"
 	_ "goadmin/internal/modules/profile"
 	_ "goadmin/internal/modules/setting"
 )

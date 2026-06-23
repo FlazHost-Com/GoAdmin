@@ -86,11 +86,11 @@ func TestSettingService_PartialUpdateKeepsExisting(t *testing.T) {
 		t.Fatalf("update1: %v", err)
 	}
 	// Update kedua hanya theme — name & email harus tetap.
-	out, err := svc.Update(ctx, dto.UpdateSettingInput{Theme: "Rose"}, "")
+	out, err := svc.Update(ctx, dto.UpdateSettingInput{Theme: "Purple"}, "")
 	if err != nil {
 		t.Fatalf("update2: %v", err)
 	}
-	if out.Name != "Awal" || out.Email != "a@b.com" || out.Theme != "Rose" {
+	if out.Name != "Awal" || out.Email != "a@b.com" || out.Theme != "Purple" {
 		t.Fatalf("partial update salah: %+v", out)
 	}
 }

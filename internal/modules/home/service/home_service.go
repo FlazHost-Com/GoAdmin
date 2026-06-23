@@ -44,7 +44,7 @@ func (s *HomeService) Landing(ctx context.Context) (LandingData, error) {
 		Template:    fetemplate.DefaultSlug,
 	}
 	pal := theme.ByName(theme.Default)
-	data.Primary, data.Accent = pal.Primary, pal.Accent
+	data.Primary, data.Accent = pal.Primary, pal.Dark
 
 	svc := s.settings()
 	if svc == nil {
@@ -73,7 +73,7 @@ func (s *HomeService) Landing(ctx context.Context) (LandingData, error) {
 	if setting.Theme != "" {
 		data.ThemeName = setting.Theme
 		pal = theme.ByName(setting.Theme)
-		data.Primary, data.Accent = pal.Primary, pal.Accent
+		data.Primary, data.Accent = pal.Primary, pal.Dark
 	}
 	data.Template = fetemplate.ResolveActive(setting.FeTemplate)
 	return data, nil

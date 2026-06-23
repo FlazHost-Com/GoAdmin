@@ -59,12 +59,13 @@ func TestMassAssignment_UnknownFieldIgnored(t *testing.T) {
 	engine := app.Build(c)
 	token := doLogin(t, engine, adminEmail, adminPass)
 
-	// Sertakan field "blocked":true & "code" yang TIDAK ada di DTO → harus diabaikan.
+	// Sertakan field "code" & "created_by" yang TIDAK ada di DTO → harus diabaikan
+	// (code di-generate server; created_by diisi dari actor, bukan body).
 	body, _ := json.Marshal(map[string]interface{}{
 		"name": "Eve", "email": "eve@example.com", "password": "password123",
-		"blocked": true, "code": "HACK-001",
+		"code": "HACK-001", "created_by": "HACK-USER",
 	})
-	req := httptest.NewRequest("POST", "/api/v1/users", bytes.NewReader(body))
+	req := httptest.NewRequest("POST", "/api/v1/access/user/store", bytes.NewReader(body))
 	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
@@ -74,21 +75,21 @@ func TestMassAssignment_UnknownFieldIgnored(t *testing.T) {
 	}
 	var resp struct {
 		Data struct {
-			Blocked bool   `json:"blocked"`
-			Code    string `json:"code"`
+			Code      string `json:"code"`
+			CreatedBy string `json:"created_by"`
 		} `json:"data"`
 	}
 	_ = json.Unmarshal(w.Body.Bytes(), &resp)
-	if resp.Data.Blocked {
-		t.Fatal("field 'blocked' tak boleh ter-set lewat mass-assignment")
-	}
 	if resp.Data.Code == "HACK-001" {
 		t.Fatal("field 'code' tak boleh di-inject lewat mass-assignment")
+	}
+	if resp.Data.CreatedBy == "HACK-USER" {
+		t.Fatal("field 'created_by' tak boleh di-inject lewat mass-assignment")
 	}
 }
 
 func getUsers(engine http.Handler, token string) int {
-	req := httptest.NewRequest("GET", "/api/v1/users", nil)
+	req := httptest.NewRequest("GET", "/api/v1/access/user", nil)
 	if token != "" {
 		req.Header.Set("Authorization", "Bearer "+token)
 	}

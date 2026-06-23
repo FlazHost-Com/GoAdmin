@@ -21,43 +21,56 @@ func NewPermissionController(perms service.IPermissionService) *PermissionContro
 	return &PermissionController{perms: perms}
 }
 
-// Index → GET /admin/v1/permissions.
+// Index → GET /admin/v1/access/permission.
 func (ctl *PermissionController) Index(c *gin.Context) {
-	var q dto.ListQuery
-	_ = c.ShouldBindQuery(&q)
+	// Sinkronkan permission dari named-route registry (route-driven, a la
+	// NodeAdmin getAllRegisteredRoute) — lazy tiap buka halaman; idempoten.
+	_ = ctl.perms.SyncFromRoutes(c.Request.Context())
+	q, qbase := bindListQuery(c)
 	res, err := ctl.perms.Index(c.Request.Context(), q)
 	if err != nil {
 		c.Error(err)
 		return
 	}
 	view.RenderView(c, "permissions/index", gin.H{
-		"title": "Manajemen Permission", "active": "permissions",
-		"permissions": res.Data, "meta": res.Meta, "search": q.Search,
+		"title": "Manajemen Permission", "active": "permission",
+		"permissions": res.Data, "meta": res.Meta,
+		"filter": filterMap(q), "qbase": qbase,
 	})
 }
 
-// Create → GET /admin/v1/permissions/create.
+// DeleteSelected → POST /admin/v1/access/permission/delete_selected (bulk delete).
+func (ctl *PermissionController) DeleteSelected(c *gin.Context) {
+	if err := ctl.perms.DestroyMany(c.Request.Context(), selectedIDs(c)); err != nil {
+		setFlashError(sessions.Default(c), errMessage(err))
+	} else {
+		setFlashSuccess(sessions.Default(c), "Permission terpilih berhasil dihapus.")
+	}
+	c.Redirect(http.StatusFound, "/admin/v1/access/permission")
+}
+
+// Create → GET /admin/v1/access/permission/create.
 func (ctl *PermissionController) Create(c *gin.Context) {
 	view.RenderView(c, "permissions/form", gin.H{
-		"title": "Tambah Permission", "active": "permissions",
-		"action": "/admin/v1/permissions", "permission": nil,
+		"title": "Tambah Permission", "active": "permission",
+		"action": "/admin/v1/access/permission/store", "permission": nil,
 	})
 }
 
-// Store → POST /admin/v1/permissions.
+// Store → POST /admin/v1/access/permission.
 func (ctl *PermissionController) Store(c *gin.Context) {
 	var in dto.CreatePermissionInput
 	_ = c.ShouldBind(&in)
 	if _, err := ctl.perms.Store(c.Request.Context(), in); err != nil {
 		setFlashError(sessions.Default(c), errMessage(err))
-		c.Redirect(http.StatusFound, "/admin/v1/permissions/create")
+		c.Redirect(http.StatusFound, "/admin/v1/access/permission/create")
 		return
 	}
 	setFlashSuccess(sessions.Default(c), "Permission berhasil dibuat.")
-	c.Redirect(http.StatusFound, "/admin/v1/permissions")
+	c.Redirect(http.StatusFound, "/admin/v1/access/permission")
 }
 
-// Edit → GET /admin/v1/permissions/:id/edit.
+// Edit → GET /admin/v1/access/permission/:id/edit.
 func (ctl *PermissionController) Edit(c *gin.Context) {
 	perm, err := ctl.perms.Show(c.Request.Context(), c.Param("id"))
 	if err != nil {
@@ -65,31 +78,31 @@ func (ctl *PermissionController) Edit(c *gin.Context) {
 		return
 	}
 	view.RenderView(c, "permissions/form", gin.H{
-		"title": "Ubah Permission", "active": "permissions",
-		"action": "/admin/v1/permissions/" + perm.ID, "permission": perm,
+		"title": "Ubah Permission", "active": "permission",
+		"action": "/admin/v1/access/permission/" + perm.ID + "/update?_method=PUT", "permission": perm,
 	})
 }
 
-// Update → POST /admin/v1/permissions/:id.
+// Update → POST /admin/v1/access/permission/:id.
 func (ctl *PermissionController) Update(c *gin.Context) {
 	id := c.Param("id")
 	var in dto.UpdatePermissionInput
 	_ = c.ShouldBind(&in)
 	if _, err := ctl.perms.Update(c.Request.Context(), id, in); err != nil {
 		setFlashError(sessions.Default(c), errMessage(err))
-		c.Redirect(http.StatusFound, "/admin/v1/permissions/"+id+"/edit")
+		c.Redirect(http.StatusFound, "/admin/v1/access/permission/"+id+"/edit")
 		return
 	}
 	setFlashSuccess(sessions.Default(c), "Permission berhasil diperbarui.")
-	c.Redirect(http.StatusFound, "/admin/v1/permissions")
+	c.Redirect(http.StatusFound, "/admin/v1/access/permission")
 }
 
-// Destroy → POST /admin/v1/permissions/:id/delete.
+// Destroy → DELETE /admin/v1/access/permission/:id/delete (form POST + ?_method=DELETE).
 func (ctl *PermissionController) Destroy(c *gin.Context) {
 	if err := ctl.perms.Destroy(c.Request.Context(), c.Param("id")); err != nil {
 		setFlashError(sessions.Default(c), errMessage(err))
 	} else {
 		setFlashSuccess(sessions.Default(c), "Permission berhasil dihapus.")
 	}
-	c.Redirect(http.StatusFound, "/admin/v1/permissions")
+	c.Redirect(http.StatusFound, "/admin/v1/access/permission")
 }

@@ -25,22 +25,39 @@ func registerAPIRoutes(ctx *router.RegistrationContext, guard *accessmw.Guard, d
 	// Auth (publik: login; terproteksi: logout, me).
 	authGrp := api.Group("/auth")
 	named(authGrp, "POST", "api.v1.auth.login", "/login", d.auth.Login)
+	// Publik (rate-limited): registrasi + reset password OTP — paritas penuh web.
+	named(authGrp, "POST", "api.v1.auth.register", "/register", d.auth.Register, otpLimiter.Middleware())
+	named(authGrp, "POST", "api.v1.auth.reset.request", "/reset/request", d.auth.ResetRequest, otpLimiter.Middleware())
+	named(authGrp, "POST", "api.v1.auth.reset.process", "/reset/process", d.auth.ResetProcess, otpLimiter.Middleware())
+	// logout = POST (mutasi: blacklist token; GET tak boleh punya efek samping)
 	authGrp.POST("/logout", guard.AuthenticatedJWT(), d.auth.Logout)
-	router.Register("api.v1.auth.logout", "/api/v1/auth/logout")
+	router.Register("POST", "api.v1.auth.logout", "/api/v1/auth/logout")
 	authGrp.GET("/me", guard.AuthenticatedJWT(), d.auth.Me)
-	router.Register("api.v1.auth.me", "/api/v1/auth/me")
+	router.Register("GET", "api.v1.auth.me", "/api/v1/auth/me")
 
-	// Semua resource di bawah ini butuh auth + permission spesifik (RBAC).
+	// Resource RBAC — namespace `api.v1.access.*` + path `/api/v1/access/*`,
+	// singular (seragam NodeAdmin). Butuh auth + permission spesifik.
 	auth := guard.AuthenticatedJWT()
 
-	users := api.Group("/users", auth)
-	resource(users, "/api/v1/users", "api.v1.users", "user", d.user.Index, d.user.Show, d.user.Store, d.user.Update, d.user.Destroy)
+	users := api.Group("/access/user", auth)
+	resource(users, "/api/v1/access/user", "api.v1.access.user", d.user.Index, d.user.Edit, d.user.Store, d.user.Update, d.user.Destroy, d.user.DeleteSelected)
 
-	roles := api.Group("/roles", auth)
-	resource(roles, "/api/v1/roles", "api.v1.roles", "role", d.role.Index, d.role.Show, d.role.Store, d.role.Update, d.role.Destroy)
+	roles := api.Group("/access/role", auth)
+	resource(roles, "/api/v1/access/role", "api.v1.access.role", d.role.Index, d.role.Edit, d.role.Store, d.role.Update, d.role.Destroy, d.role.DeleteSelected)
+	// Kelola permission per-role (kembar web, persis NodeAdmin api.ts).
+	roles.GET("/:id/permission", accessmw.Authorize(), d.role.Permission)
+	router.Register("GET", "api.v1.access.role.permission", "/api/v1/access/role/:id/permission")
+	roles.GET("/:id/permission/:permission_id/assign", accessmw.Authorize(), d.role.PermissionAssign)
+	router.Register("GET", "api.v1.access.role.permission.assign", "/api/v1/access/role/:id/permission/:permission_id/assign")
+	roles.POST("/:id/permission/assign_selected", accessmw.Authorize(), d.role.PermissionAssignSelected)
+	router.Register("POST", "api.v1.access.role.permission.assign_selected", "/api/v1/access/role/:id/permission/assign_selected")
+	roles.GET("/:id/permission/:permission_id/unassign", accessmw.Authorize(), d.role.PermissionUnassign)
+	router.Register("GET", "api.v1.access.role.permission.unassign", "/api/v1/access/role/:id/permission/:permission_id/unassign")
+	roles.POST("/:id/permission/unassign_selected", accessmw.Authorize(), d.role.PermissionUnassignSelected)
+	router.Register("POST", "api.v1.access.role.permission.unassign_selected", "/api/v1/access/role/:id/permission/unassign_selected")
 
-	perms := api.Group("/permissions", auth)
-	resource(perms, "/api/v1/permissions", "api.v1.permissions", "permission", d.perm.Index, d.perm.Show, d.perm.Store, d.perm.Update, d.perm.Destroy)
+	perms := api.Group("/access/permission", auth)
+	resource(perms, "/api/v1/access/permission", "api.v1.access.permission", d.perm.Index, d.perm.Edit, d.perm.Store, d.perm.Update, d.perm.Destroy, d.perm.DeleteSelected)
 }
 
 // named mendaftarkan satu route bernama (registry) + memasangnya ke grup.
@@ -56,28 +73,35 @@ func named(g *gin.RouterGroup, method, name, path string, h gin.HandlerFunc, mw 
 	case "DELETE":
 		g.DELETE(path, handlers...)
 	}
-	router.Register(name, fullPath(g, path))
+	router.Register(method, name, fullPath(g, path))
 }
 
-// resource memasang 5 endpoint CRUD standar dengan guard permission per-aksi
-// (RBAC: <subject>.view / .create / .update / .delete; Administrator bypass).
-func resource(g *gin.RouterGroup, basePath, nameBase, subject string,
-	index, show, store, update, destroy gin.HandlerFunc) {
+// resource memasang endpoint CRUD access dengan path & nama VERBOSE PERSIS
+// NodeAdmin (BUKAN REST): index, store `/store`, edit `/:id/edit`, update
+// `/:id/update`, delete `/:id/delete`, delete_selected `/delete_selected`.
+// RBAC route-driven: Authorize() menurunkan permission dari nama-route+method
+// (Administrator bypass). API kembar web; klien JWT kirim method asli (tanpa
+// ?_method override). Tak ada REST `GET /:id` (show) / `DELETE /:id` (destroy).
+func resource(g *gin.RouterGroup, basePath, nameBase string,
+	index, edit, store, update, destroy, deleteSelected gin.HandlerFunc) {
 
-	g.GET("", accessmw.Authorize(subject+".view"), index)
-	router.Register(nameBase+".index", basePath)
+	g.GET("", accessmw.Authorize(), index)
+	router.Register("GET", nameBase+".index", basePath)
 
-	g.GET("/:id", accessmw.Authorize(subject+".view"), show)
-	router.Register(nameBase+".show", basePath+"/:id")
+	g.POST("/store", accessmw.Authorize(), store)
+	router.Register("POST", nameBase+".store", basePath+"/store")
 
-	g.POST("", accessmw.Authorize(subject+".create"), store)
-	router.Register(nameBase+".store", basePath)
+	g.GET("/:id/edit", accessmw.Authorize(), edit)
+	router.Register("GET", nameBase+".edit", basePath+"/:id/edit")
 
-	g.PUT("/:id", accessmw.Authorize(subject+".update"), update)
-	router.Register(nameBase+".update", basePath+"/:id")
+	g.PUT("/:id/update", accessmw.Authorize(), update)
+	router.Register("PUT", nameBase+".update", basePath+"/:id/update")
 
-	g.DELETE("/:id", accessmw.Authorize(subject+".delete"), destroy)
-	router.Register(nameBase+".destroy", basePath+"/:id")
+	g.DELETE("/:id/delete", accessmw.Authorize(), destroy)
+	router.Register("DELETE", nameBase+".delete", basePath+"/:id/delete")
+
+	g.POST("/delete_selected", accessmw.Authorize(), deleteSelected)
+	router.Register("POST", nameBase+".delete_selected", basePath+"/delete_selected")
 }
 
 // fullPath menggabungkan base path grup dengan path relatif untuk registry.

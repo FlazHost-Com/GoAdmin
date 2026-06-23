@@ -15,6 +15,9 @@ import (
 	"goadmin/internal/config"
 	"goadmin/internal/container"
 	"goadmin/internal/middleware"
+	settingmodel "goadmin/internal/modules/setting/model"
+	settingsvc "goadmin/internal/modules/setting/service"
+	"goadmin/internal/modules/setting/theme"
 	"goadmin/internal/router"
 	"goadmin/internal/view"
 )
@@ -68,6 +71,8 @@ func Build(c *container.Container) *gin.Engine {
 		webGroup.Use(middleware.CSRF())
 		// Flash one-shot (feedback pasca-redirect) → context → RenderView locals.
 		webGroup.Use(middleware.Flash())
+		// Tema aktif + setting global → context (chrome admin themeable + switchable).
+		webGroup.Use(themeContext(c))
 	}
 	// Mode api: webGroup tetap nil → modul UI guard & lewati registrasi web.
 
@@ -101,6 +106,29 @@ func mountWebLayer(engine *gin.Engine, cfg *config.Config) {
 		"internal/modules/*/view/*.html",
 	); err == nil {
 		eng.Attach(engine)
+	}
+}
+
+// themeContext meng-inject setting global + palet tema aktif ke gin.Context tiap
+// request web (RenderView lalu menaruhnya ke locals chrome). Setting di-resolve
+// LAZY dari container (ter-cache di service).
+func themeContext(c *container.Container) gin.HandlerFunc {
+	return func(gc *gin.Context) {
+		name := theme.Default
+		var setting *settingmodel.Setting
+		if svc, ok := c.Resolve("setting.ISettingService").(settingsvc.ISettingService); ok && svc != nil {
+			if s, err := svc.Get(gc.Request.Context()); err == nil {
+				setting = s
+				if s.Theme != "" && theme.IsValid(s.Theme) {
+					name = s.Theme
+				}
+			}
+		}
+		gc.Set("setting", setting)
+		gc.Set("themeName", name)
+		gc.Set("theme", theme.ByName(name))
+		gc.Set("themes", theme.All())
+		gc.Next()
 	}
 }
 
