@@ -26,7 +26,7 @@ type Mailer interface {
 }
 
 // New memilih implementasi: SMTP bila host diset, selain itu LogMailer (dev).
-func New(cfg config.SMTPConfig) Mailer {
+func New(cfg config.MailConfig) Mailer {
 	if strings.TrimSpace(cfg.Host) == "" {
 		return LogMailer{}
 	}
@@ -37,14 +37,13 @@ func New(cfg config.SMTPConfig) Mailer {
 type LogMailer struct{}
 
 func (LogMailer) Send(_ context.Context, msg Message) error {
-	// Dev: cetak isi email (termasuk OTP) ke log agar bisa diuji tanpa SMTP.
-	log.Printf("[mail:log] to=%s subject=%q (SMTP belum dikonfigurasi)\n%s", msg.To, msg.Subject, msg.Body)
+	log.Printf("[mail:log] to=%s subject=%q (MAIL_HOST belum dikonfigurasi)\n%s", msg.To, msg.Subject, msg.Body)
 	return nil
 }
 
 // SMTPMailer mengirim via server SMTP (PLAIN auth).
 type SMTPMailer struct {
-	cfg config.SMTPConfig
+	cfg config.MailConfig
 }
 
 func (m *SMTPMailer) Send(_ context.Context, msg Message) error {
@@ -53,7 +52,11 @@ func (m *SMTPMailer) Send(_ context.Context, msg Message) error {
 	if m.cfg.Username != "" {
 		auth = smtp.PlainAuth("", m.cfg.Username, m.cfg.Password, m.cfg.Host)
 	}
-	if err := smtp.SendMail(addr, auth, m.cfg.From, []string{msg.To}, Build(m.cfg.From, msg)); err != nil {
+	from := m.cfg.FromAddress
+	if m.cfg.FromName != "" {
+		from = fmt.Sprintf("%s <%s>", m.cfg.FromName, m.cfg.FromAddress)
+	}
+	if err := smtp.SendMail(addr, auth, m.cfg.FromAddress, []string{msg.To}, Build(from, msg)); err != nil {
 		return fmt.Errorf("mail: gagal kirim ke %s: %w", msg.To, err)
 	}
 	return nil

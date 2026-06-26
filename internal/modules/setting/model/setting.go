@@ -13,6 +13,7 @@ type Setting struct {
 	Description string `gorm:"type:text" json:"description"`
 	Icon        string `gorm:"type:varchar(255)" json:"icon"`
 	Logo        string `gorm:"type:varchar(255)" json:"logo"`
+	Favicon     string `gorm:"type:varchar(255)" json:"favicon"`
 	LoginImage  string `gorm:"type:varchar(255)" json:"login_image"`
 	Phone       string `gorm:"type:varchar(255)" json:"phone"`
 	Address     string `gorm:"type:varchar(255)" json:"address"`

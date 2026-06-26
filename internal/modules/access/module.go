@@ -39,7 +39,7 @@ func (m *Module) Register(ctx *router.RegistrationContext) {
 	jwtMgr := auth.NewJWTManager(cfg.JWT.Secret, cfg.JWT.ExpiresIn)
 	blacklist := resolveBlacklist(c)
 	authSvc := service.NewAuthService(c.DB, jwtMgr, blacklist)
-	resetSvc := service.NewPasswordResetService(c.DB, c.Mailer, cfg.Security.BcryptRounds, cfg.App.Name)
+	resetSvc := service.NewPasswordResetService(c.DB, c.Mailer, cfg.Security.BcryptRounds, cfg.App.Name, cfg.Security.OTPExpiryMinutes)
 
 	// Simpan ke container (token = nama interface) agar bisa diintrospeksi.
 	c.Provide("access.IUserService", userSvc)

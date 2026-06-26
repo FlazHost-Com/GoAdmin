@@ -44,7 +44,7 @@ func (ctl *PermissionController) DeleteSelected(c *gin.Context) {
 	if err := ctl.perms.DestroyMany(c.Request.Context(), selectedIDs(c)); err != nil {
 		setFlashError(sessions.Default(c), errMessage(err))
 	} else {
-		setFlashSuccess(sessions.Default(c), "Permission terpilih berhasil dihapus.")
+		setFlashSuccess(sessions.Default(c), "Delete Permission Success.")
 	}
 	c.Redirect(http.StatusFound, "/admin/v1/access/permission")
 }
@@ -66,7 +66,7 @@ func (ctl *PermissionController) Store(c *gin.Context) {
 		c.Redirect(http.StatusFound, "/admin/v1/access/permission/create")
 		return
 	}
-	setFlashSuccess(sessions.Default(c), "Permission berhasil dibuat.")
+	setFlashSuccess(sessions.Default(c), "Create Permission Success.")
 	c.Redirect(http.StatusFound, "/admin/v1/access/permission")
 }
 
@@ -93,7 +93,7 @@ func (ctl *PermissionController) Update(c *gin.Context) {
 		c.Redirect(http.StatusFound, "/admin/v1/access/permission/"+id+"/edit")
 		return
 	}
-	setFlashSuccess(sessions.Default(c), "Permission berhasil diperbarui.")
+	setFlashSuccess(sessions.Default(c), "Update Permission Success.")
 	c.Redirect(http.StatusFound, "/admin/v1/access/permission")
 }
 

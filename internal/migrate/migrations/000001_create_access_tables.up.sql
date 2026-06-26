@@ -2,7 +2,7 @@
 -- → jalan di MySQL, Postgres, SQLite. golang-migrate menjamin sekali-jalan
 -- (tak perlu IF NOT EXISTS pada index — MySQL menolaknya).
 
--- Skema KANONIK lintas-port (1:1 NodeAdmin): guard_name (web/api, untuk filter),
+-- Skema KANONIK lintas-port (1:1 NodeAdmin): permissions.guard_name (web/api, untuk filter),
 -- name varchar(255) (permissions.name NON-unik, roles.name unik), created_by/updated_by.
 CREATE TABLE IF NOT EXISTS permissions (
   id varchar(36) PRIMARY KEY,
@@ -19,14 +19,12 @@ CREATE INDEX ix_permissions_guard ON permissions (guard_name);
 CREATE TABLE IF NOT EXISTS roles (
   id varchar(36) PRIMARY KEY,
   name varchar(255) NOT NULL,
-  guard_name varchar(20) DEFAULT 'web',
   created_by varchar(36),
   updated_by varchar(36),
   created_at timestamp DEFAULT CURRENT_TIMESTAMP,
   updated_at timestamp DEFAULT CURRENT_TIMESTAMP
 );
 CREATE UNIQUE INDEX ux_roles_name ON roles (name);
-CREATE INDEX ix_roles_guard ON roles (guard_name);
 
 CREATE TABLE IF NOT EXISTS users (
   id varchar(36) PRIMARY KEY,

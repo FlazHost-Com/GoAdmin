@@ -20,9 +20,9 @@ import (
 func Seed(db *gorm.DB, adminEmail, adminPassword string, bcryptRounds int) error {
 	// 1. Role Administrator (guard web). Tanpa assignment permission — bypass.
 	var admin model.Role
-	err := db.Where("name = ? AND guard_name = ?", model.RoleAdministrator, "web").First(&admin).Error
+	err := db.Where("name = ?", model.RoleAdministrator).First(&admin).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		admin = model.Role{ID: helpers.NewID(), Name: model.RoleAdministrator, GuardName: "web", Status: model.StatusActive}
+		admin = model.Role{ID: helpers.NewID(), Name: model.RoleAdministrator, Status: model.StatusActive}
 		if err := db.Create(&admin).Error; err != nil {
 			return err
 		}

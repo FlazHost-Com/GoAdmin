@@ -44,7 +44,7 @@ func (ctl *RoleController) DeleteSelected(c *gin.Context) {
 	if err := ctl.roles.DestroyMany(c.Request.Context(), selectedIDs(c)); err != nil {
 		setFlashError(sessions.Default(c), errMessage(err))
 	} else {
-		setFlashSuccess(sessions.Default(c), "Role terpilih berhasil dihapus.")
+		setFlashSuccess(sessions.Default(c), "Delete Role Success.")
 	}
 	c.Redirect(http.StatusFound, "/admin/v1/access/role")
 }
@@ -72,7 +72,7 @@ func (ctl *RoleController) Store(c *gin.Context) {
 		c.Redirect(http.StatusFound, "/admin/v1/access/role/create")
 		return
 	}
-	setFlashSuccess(sessions.Default(c), "Role berhasil dibuat.")
+	setFlashSuccess(sessions.Default(c), "Create Role Success.")
 	c.Redirect(http.StatusFound, "/admin/v1/access/role")
 }
 
@@ -109,7 +109,7 @@ func (ctl *RoleController) Update(c *gin.Context) {
 		c.Redirect(http.StatusFound, "/admin/v1/access/role/"+id+"/edit")
 		return
 	}
-	setFlashSuccess(sessions.Default(c), "Role berhasil diperbarui.")
+	setFlashSuccess(sessions.Default(c), "Update Role Success.")
 	c.Redirect(http.StatusFound, "/admin/v1/access/role")
 }
 
@@ -118,7 +118,7 @@ func (ctl *RoleController) Destroy(c *gin.Context) {
 	if err := ctl.roles.Destroy(c.Request.Context(), c.Param("id")); err != nil {
 		setFlashError(sessions.Default(c), errMessage(err))
 	} else {
-		setFlashSuccess(sessions.Default(c), "Role berhasil dihapus.")
+		setFlashSuccess(sessions.Default(c), "Delete Role Success.")
 	}
 	c.Redirect(http.StatusFound, "/admin/v1/access/role")
 }
@@ -160,7 +160,7 @@ func (ctl *RoleController) PermissionAssign(c *gin.Context) {
 	if err := ctl.roles.AssignPermission(c.Request.Context(), c.Param("id"), c.Param("permission_id")); err != nil {
 		setFlashError(sessions.Default(c), errMessage(err))
 	} else {
-		setFlashSuccess(sessions.Default(c), "Permission berhasil di-assign.")
+		setFlashSuccess(sessions.Default(c), "Assign Permission Success.")
 	}
 	redirectBack(c, "/admin/v1/access/role/"+c.Param("id")+"/permission")
 }
@@ -170,7 +170,7 @@ func (ctl *RoleController) PermissionAssignSelected(c *gin.Context) {
 	if err := ctl.roles.AssignPermissions(c.Request.Context(), c.Param("id"), selectedIDs(c)); err != nil {
 		setFlashError(sessions.Default(c), errMessage(err))
 	} else {
-		setFlashSuccess(sessions.Default(c), "Permission terpilih berhasil di-assign.")
+		setFlashSuccess(sessions.Default(c), "Assign Permission Success.")
 	}
 	redirectBack(c, "/admin/v1/access/role/"+c.Param("id")+"/permission")
 }
@@ -180,7 +180,7 @@ func (ctl *RoleController) PermissionUnassign(c *gin.Context) {
 	if err := ctl.roles.UnassignPermission(c.Request.Context(), c.Param("id"), c.Param("permission_id")); err != nil {
 		setFlashError(sessions.Default(c), errMessage(err))
 	} else {
-		setFlashSuccess(sessions.Default(c), "Permission berhasil di-unassign.")
+		setFlashSuccess(sessions.Default(c), "Unassign Permission Success.")
 	}
 	redirectBack(c, "/admin/v1/access/role/"+c.Param("id")+"/permission")
 }
@@ -190,7 +190,7 @@ func (ctl *RoleController) PermissionUnassignSelected(c *gin.Context) {
 	if err := ctl.roles.UnassignPermissions(c.Request.Context(), c.Param("id"), selectedIDs(c)); err != nil {
 		setFlashError(sessions.Default(c), errMessage(err))
 	} else {
-		setFlashSuccess(sessions.Default(c), "Permission terpilih berhasil di-unassign.")
+		setFlashSuccess(sessions.Default(c), "Unassign Permission Success.")
 	}
 	redirectBack(c, "/admin/v1/access/role/"+c.Param("id")+"/permission")
 }

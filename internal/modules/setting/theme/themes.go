@@ -1,5 +1,5 @@
 // Package theme adalah katalog palet tema admin (theme switcher) — PERSIS dengan
-// NodeAdmin (@flazhost-nodeadmin/core THEMES). Satu set view didorong oleh 4
+// NodeAdmin (5 tema: Blue/Purple/Green/Orange/Red). Satu set view didorong oleh 4
 // warna (primary/secondary/light/dark) per tema via CSS variable + Tailwind
 // config inline di chrome → ganti tema = ganti palet saat render, tanpa rebuild.
 package theme
@@ -16,17 +16,13 @@ type Theme struct {
 // Default = tema bawaan bila Setting.theme kosong/invalid.
 const Default = "Blue"
 
-// catalog = 9 palet PERSIS NodeAdmin (urut: Blue default lalu alfabetis).
+// catalog = 5 palet standar NodeAdmin (urut: Blue default lalu alfabetis).
 var catalog = []Theme{
-	{Name: "Blue", Primary: "#3B82F6", Secondary: "#60A5FA", Light: "#DBEAFE", Dark: "#1E40AF"},
-	{Name: "Black", Primary: "#374151", Secondary: "#4B5563", Light: "#6B7280", Dark: "#1F2937"},
-	{Name: "Brown", Primary: "#A16207", Secondary: "#D97706", Light: "#FEF3C7", Dark: "#78350F"},
-	{Name: "Green", Primary: "#10B981", Secondary: "#34D399", Light: "#D1FAE5", Dark: "#047857"},
-	{Name: "Grey", Primary: "#6B7280", Secondary: "#9CA3AF", Light: "#E5E7EB", Dark: "#374151"},
-	{Name: "Orange", Primary: "#F59E0B", Secondary: "#FBBF24", Light: "#FEF3C7", Dark: "#D97706"},
-	{Name: "Purple", Primary: "#8B5CF6", Secondary: "#A78BFA", Light: "#F3E8FF", Dark: "#6D28D9"},
-	{Name: "Red", Primary: "#EF4444", Secondary: "#F87171", Light: "#FECACA", Dark: "#B91C1C"},
-	{Name: "Yellow", Primary: "#F59E0B", Secondary: "#FCD34D", Light: "#FEF3C7", Dark: "#D97706"},
+	{Name: "Blue", Primary: "#3B82F6", Secondary: "#60A5FA", Light: "#EFF6FF", Dark: "#1E40AF"},
+	{Name: "Green", Primary: "#10B981", Secondary: "#34D399", Light: "#ECFDF5", Dark: "#065F46"},
+	{Name: "Orange", Primary: "#F59E0B", Secondary: "#FCD34D", Light: "#FFFBEB", Dark: "#92400E"},
+	{Name: "Purple", Primary: "#8B5CF6", Secondary: "#A78BFA", Light: "#F5F3FF", Dark: "#5B21B6"},
+	{Name: "Red", Primary: "#EF4444", Secondary: "#F87171", Light: "#FEF2F2", Dark: "#991B1B"},
 }
 
 // All mengembalikan salinan katalog (untuk UI switcher).

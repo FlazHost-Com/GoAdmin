@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS settings (
   description text,
   icon varchar(255),
   logo varchar(255),
+  favicon varchar(255),
   login_image varchar(255),
   phone varchar(255),
   address varchar(255),

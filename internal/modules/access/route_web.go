@@ -11,11 +11,11 @@ import (
 	"goadmin/internal/modules/access/service"
 )
 
-// loginLimiter meredam brute-force login: maks 5 percobaan / menit / IP.
-var loginLimiter = middleware.NewRateLimiter(5, time.Minute)
+// loginLimiter meredam brute-force login: maks 10 percobaan / 15 menit / IP.
+var loginLimiter = middleware.NewRateLimiter(10, 15*time.Minute)
 
-// otpLimiter membatasi permintaan OTP reset: maks 3 / menit / IP.
-var otpLimiter = middleware.NewRateLimiter(3, time.Minute)
+// otpLimiter membatasi permintaan OTP reset: maks 5 / 15 menit / IP.
+var otpLimiter = middleware.NewRateLimiter(5, 15*time.Minute)
 
 // registerWebRoutes memasang route web modul access:
 //   - Auth sesi PUBLIK: /auth/login (GET/POST), /auth/logout.

@@ -35,9 +35,6 @@ func (s *RoleService) Index(ctx context.Context, q dto.ListQuery) (helpers.Pagin
 	if q.QStatus != "" {
 		query = query.Where("status = ?", q.QStatus)
 	}
-	if q.QGuard != "" {
-		query = query.Where("guard_name = ?", q.QGuard)
-	}
 	if q.QDesc != "" {
 		query = helpers.CiLike(query, "desc", q.QDesc)
 	}
@@ -75,14 +72,9 @@ func (s *RoleService) Store(ctx context.Context, in dto.CreateRoleInput) (*model
 	if status == "" {
 		status = model.StatusActive
 	}
-	guard := in.GuardName
-	if guard == "" {
-		guard = "web"
-	}
 	role := model.Role{
 		ID:          helpers.NewID(),
 		Name:        in.Name,
-		GuardName:   guard,
 		Status:      status,
 		Description: in.Description,
 	}
@@ -114,9 +106,6 @@ func (s *RoleService) Update(ctx context.Context, id string, in dto.UpdateRoleIn
 		}
 	}
 	role.Name = in.Name
-	if in.GuardName != "" {
-		role.GuardName = in.GuardName
-	}
 	if in.Status != "" {
 		role.Status = in.Status
 	}

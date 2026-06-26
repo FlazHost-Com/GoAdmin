@@ -3,7 +3,6 @@ package dto
 // CreateRoleInput = payload buat role.
 type CreateRoleInput struct {
 	Name          string   `json:"name" form:"name" binding:"required,max=50"`
-	GuardName     string   `json:"guard_name" form:"guard_name" binding:"omitempty,oneof=web api"`
 	Status        string   `json:"status" form:"status" binding:"omitempty,oneof=Active Inactive"`
 	Description   string   `json:"description" form:"description" binding:"omitempty,max=255"`
 	PermissionIDs []string `json:"permission_ids" form:"permission_ids" binding:"omitempty,dive,max=36"`
@@ -12,7 +11,6 @@ type CreateRoleInput struct {
 // UpdateRoleInput = payload ubah role.
 type UpdateRoleInput struct {
 	Name          string   `json:"name" form:"name" binding:"required,max=50"`
-	GuardName     string   `json:"guard_name" form:"guard_name" binding:"omitempty,oneof=web api"`
 	Status        string   `json:"status" form:"status" binding:"omitempty,oneof=Active Inactive"`
 	Description   string   `json:"description" form:"description" binding:"omitempty,max=255"`
 	PermissionIDs []string `json:"permission_ids" form:"permission_ids" binding:"omitempty,dive,max=36"`

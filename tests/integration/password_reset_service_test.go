@@ -43,7 +43,7 @@ func newResetEnv(t *testing.T) (*accesssvc.PasswordResetService, *captureMailer,
 		t.Fatalf("seed user: %v", err)
 	}
 	mailer := &captureMailer{}
-	svc := accesssvc.NewPasswordResetService(c.DB, mailer, c.Config.Security.BcryptRounds, "GoAdmin")
+	svc := accesssvc.NewPasswordResetService(c.DB, mailer, c.Config.Security.BcryptRounds, "GoAdmin", c.Config.Security.OTPExpiryMinutes)
 	return svc, mailer, c, ctx
 }
 

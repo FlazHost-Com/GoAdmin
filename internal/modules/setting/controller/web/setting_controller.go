@@ -118,7 +118,7 @@ func (ctl *SettingController) Update(c *gin.Context) {
 	if in.FeTemplate != "" && !fetemplate.IsValidSlug(in.FeTemplate) {
 		errs["fe_template"] = "Template tidak dikenali."
 	}
-	for field, dst := range map[string]*string{"icon": &in.Icon, "logo": &in.Logo, "login_image": &in.LoginImage} {
+	for field, dst := range map[string]*string{"icon": &in.Icon, "logo": &in.Logo, "favicon": &in.Favicon, "login_image": &in.LoginImage} {
 		url, uerr := ctl.uploadImage(c, field)
 		if uerr != nil {
 			errs[field] = errMessage(uerr)
@@ -130,7 +130,7 @@ func (ctl *SettingController) Update(c *gin.Context) {
 	}
 	if len(errs) > 0 {
 		middleware.SetFieldErrors(sess, errs, settingOld(c))
-		setFlashError(sess, "Periksa kembali isian yang ditandai.")
+		setFlashError(sess, "Please check the marked fields.")
 		c.Redirect(http.StatusFound, "/admin/v1/setting")
 		return
 	}
@@ -150,7 +150,7 @@ func (ctl *SettingController) Update(c *gin.Context) {
 			return
 		}
 	}
-	setFlashSuccess(sess, "Pengaturan disimpan.")
+	setFlashSuccess(sess, "Save Setting Success.")
 	c.Redirect(http.StatusFound, "/admin/v1/setting")
 }
 
@@ -198,7 +198,7 @@ func actorID(c *gin.Context) string {
 // settingOld menangkap nilai form teks yang disubmit (untuk repopulasi inline
 // saat validasi gagal — padanan `req.session.old` NodeAdmin).
 func settingOld(c *gin.Context) map[string]string {
-	keys := []string{"initial", "name", "description", "phone", "address", "email", "copyright", "theme", "fe_template"}
+	keys := []string{"initial", "name", "description", "phone", "address", "email", "copyright", "theme", "fe_template", "favicon"}
 	old := make(map[string]string, len(keys))
 	for _, k := range keys {
 		if v := c.PostForm(k); v != "" {

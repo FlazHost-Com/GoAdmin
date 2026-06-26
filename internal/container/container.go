@@ -39,7 +39,7 @@ func New(cfg *config.Config, db *gorm.DB, rdb *redis.Client) *Container {
 		Config:   cfg,
 		DB:       db,
 		Redis:    rdb,
-		Mailer:   mail.New(cfg.SMTP),
+		Mailer:   mail.New(cfg.Mail),
 		Storage:  storage.New(cfg.Storage),
 		services: map[string]interface{}{},
 	}

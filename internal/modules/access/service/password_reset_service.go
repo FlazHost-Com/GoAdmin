@@ -14,24 +14,26 @@ import (
 	"goadmin/internal/modules/access/model"
 )
 
-// otpTTL = masa berlaku OTP reset.
-const otpTTL = 15 * time.Minute
-
 // PasswordResetService menangani reset password via OTP email. OTP disimpan
 // TER-HASH (bcrypt) + expiry; plaintext hanya dikirim via email.
 type PasswordResetService struct {
-	db           *gorm.DB
-	mailer       mail.Mailer
-	bcryptRounds int
-	appName      string
+	db               *gorm.DB
+	mailer           mail.Mailer
+	bcryptRounds     int
+	appName          string
+	otpExpiryMinutes int
 }
 
 // Pastikan kontrak terpenuhi saat compile.
 var _ IPasswordResetService = (*PasswordResetService)(nil)
 
 // NewPasswordResetService merakit service.
-func NewPasswordResetService(db *gorm.DB, mailer mail.Mailer, bcryptRounds int, appName string) *PasswordResetService {
-	return &PasswordResetService{db: db, mailer: mailer, bcryptRounds: bcryptRounds, appName: appName}
+// otpExpiryMinutes dibaca dari OTP_EXPIRY_MINUTES env (default 10).
+func NewPasswordResetService(db *gorm.DB, mailer mail.Mailer, bcryptRounds int, appName string, otpExpiryMinutes int) *PasswordResetService {
+	if otpExpiryMinutes <= 0 {
+		otpExpiryMinutes = 10
+	}
+	return &PasswordResetService{db: db, mailer: mailer, bcryptRounds: bcryptRounds, appName: appName, otpExpiryMinutes: otpExpiryMinutes}
 }
 
 // RequestReset membuat OTP, menyimpan hash+expiry, dan mengirimkannya via email.
@@ -51,7 +53,7 @@ func (s *PasswordResetService) RequestReset(ctx context.Context, email string) e
 	if herr != nil {
 		return apperr.Internal("gagal hash OTP: " + herr.Error())
 	}
-	expires := time.Now().Add(otpTTL).UnixMilli()
+	expires := time.Now().Add(time.Duration(s.otpExpiryMinutes) * time.Minute).UnixMilli()
 	user.PasswordOTP = hash
 	user.PasswordOTPExpires = &expires
 	if err := s.db.WithContext(ctx).Model(&user).
@@ -74,7 +76,7 @@ func (s *PasswordResetService) RequestReset(ctx context.Context, email string) e
 // Reset memverifikasi OTP lalu menyetel password baru (dan menghapus OTP).
 func (s *PasswordResetService) Reset(ctx context.Context, email, otp, newPassword string) error {
 	if len(newPassword) < 8 {
-		return apperr.Validation("Password minimal 8 karakter", map[string]string{"password": "minimal 8 karakter"})
+		return apperr.Validation("Password minimum 8 characters.", map[string]string{"password": "minimum 8 characters"})
 	}
 
 	var user model.User
@@ -87,13 +89,13 @@ func (s *PasswordResetService) Reset(ctx context.Context, email, otp, newPasswor
 	}
 
 	if user.PasswordOTP == "" || user.PasswordOTPExpires == nil {
-		return apperr.Unauthorized("OTP tidak valid atau belum diminta")
+		return apperr.Unauthorized("OTP is invalid.")
 	}
 	if time.Now().UnixMilli() > *user.PasswordOTPExpires {
-		return apperr.Unauthorized("OTP sudah kedaluwarsa")
+		return apperr.Unauthorized("OTP has expired.")
 	}
 	if !auth.CheckPassword(user.PasswordOTP, otp) {
-		return apperr.Unauthorized("Email atau OTP salah")
+		return apperr.Unauthorized("OTP is invalid.")
 	}
 
 	hash, herr := auth.HashPassword(newPassword, s.bcryptRounds)

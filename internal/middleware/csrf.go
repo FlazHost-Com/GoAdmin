@@ -14,7 +14,7 @@ import (
 const (
 	csrfSessionKey = "csrf_token"   // kunci token di sesi
 	csrfFieldName  = "_csrf"        // nama field form
-	csrfHeaderName = "X-CSRF-Token" // alternatif via header (AJAX)
+	csrfHeaderName = "x-csrf-token" // alternatif via header (AJAX, lowercase sesuai standar)
 	csrfCtxKey     = "csrf_token"   // kunci di gin.Context (dibaca RenderView)
 )
 

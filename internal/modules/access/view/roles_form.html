@@ -8,12 +8,6 @@
   <form method="post" action="{{.action}}">
     <input type="hidden" name="_csrf" value="{{._csrf}}">
     <div class="mb-3"><label class="form-label fw-semibold">Name</label><input type="text" name="name" required value="{{if .role}}{{.role.Name}}{{end}}" class="form-control"></div>
-    <div class="mb-3"><label class="form-label fw-semibold">Guard</label>
-      <select name="guard_name" class="form-control">
-        <option value="web" {{if .role}}{{if eq .role.GuardName "web"}}selected{{end}}{{else}}selected{{end}}>web</option>
-        <option value="api" {{if .role}}{{if eq .role.GuardName "api"}}selected{{end}}{{end}}>api</option>
-      </select>
-    </div>
     <div class="mb-3"><label class="form-label fw-semibold">Status</label>
       <select name="status" class="form-control">
         <option value="Active" {{if .role}}{{if eq .role.Status "Active"}}selected{{end}}{{else}}selected{{end}}>Active</option>

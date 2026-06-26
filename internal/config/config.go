@@ -29,16 +29,16 @@ const (
 
 // Config adalah konfigurasi tervalidasi seluruh aplikasi.
 type Config struct {
-	Env     string // development | production | test
-	IsProd  bool
-	IsTest  bool
-	App     AppConfig
-	DB      DBConfig
-	Redis   RedisConfig
-	Session SessionConfig
-	JWT     JWTConfig
-	Security   SecurityConfig
-	SMTP       SMTPConfig
+	Env    string // development | production | test
+	IsProd bool
+	IsTest bool
+	App    AppConfig
+	DB     DBConfig
+	Redis  RedisConfig
+	Session  SessionConfig
+	JWT      JWTConfig
+	Security SecurityConfig
+	Mail     MailConfig
 	FeTemplate FeTemplateConfig
 	Storage    StorageConfig
 }
@@ -80,26 +80,33 @@ type JWTConfig struct {
 }
 
 type SecurityConfig struct {
-	BcryptRounds int
-	CORSOrigins  []string
+	BcryptRounds    int
+	OTPExpiryMinutes int
+	DefaultPageSize  int
+	CORSOrigins     []string
 }
 
-// SMTPConfig = pengiriman email. Host kosong → mailer fallback (log saja, dev).
-type SMTPConfig struct {
-	Host     string
-	Port     int
-	Username string
-	Password string
-	From     string
+// MailConfig = pengiriman email. Host kosong → mailer fallback (log saja, dev).
+// Nama env mengikuti standar NodeAdmin: MAIL_HOST, MAIL_PORT, MAIL_SECURE,
+// MAIL_USERNAME, MAIL_PASSWORD, MAIL_FROM_NAME, MAIL_FROM_ADDRESS.
+type MailConfig struct {
+	Host        string
+	Port        int
+	Secure      bool
+	Username    string
+	Password    string
+	FromName    string
+	FromAddress string
 }
 
 // StorageConfig = penyimpanan file upload (gambar). Driver "local" (disk) atau
 // "s3" (S3/OSS/MinIO-compatible). Lokal disajikan static di URLBase.
+// Nama env mengikuti standar NodeAdmin: STORAGE_DRIVER, STORAGE_ACCESS_KEY_ID, dll.
 type StorageConfig struct {
 	Driver  string // local | s3
 	Dir     string // (local) folder, mis. web/uploads
 	URLBase string // (local) prefix URL publik, mis. /uploads
-	// S3 (driver=s3)
+	// S3 (driver=s3) — env names: STORAGE_ACCESS_KEY_ID, STORAGE_SECRET_ACCESS_KEY, dll.
 	S3Endpoint  string
 	S3Region    string
 	S3Bucket    string
@@ -110,10 +117,6 @@ type StorageConfig struct {
 }
 
 // FeTemplateConfig = frontend template switcher (katalog landing eksternal).
-// Remote=true (DEFAULT, sejajar NodeAdmin yang selalu mem-fetch) → fetch daftar
-// 640 landing dari TreeURL (lazy, sekali, di-cache) + unduh HTML on-demand dari
-// RawBaseURL; gagal/offline → fallback ke katalog kurasi (15). Set false untuk
-// memaksa offline (hanya kurasi) — mis. lingkungan air-gapped/CI tanpa jaringan.
 type FeTemplateConfig struct {
 	Remote     bool
 	TreeURL    string
@@ -122,15 +125,12 @@ type FeTemplateConfig struct {
 }
 
 // Load membaca konfigurasi dari .env + environment dan memvalidasinya.
-// Mengembalikan error (bukan panic) agar pemanggil (main) yang memutuskan
-// fail-fast — memudahkan test memuat config tanpa mematikan proses.
 func Load() (*Config, error) {
 	v := viper.New()
 	v.SetConfigName(".env")
 	v.SetConfigType("env")
 	v.AddConfigPath(".")
 	v.AutomaticEnv()
-	// Abaikan bila .env tidak ada (mis. di container/CI yang inject env langsung).
 	_ = v.ReadInConfig()
 
 	setDefaults(v)
@@ -178,19 +178,23 @@ func Load() (*Config, error) {
 		},
 		JWT: JWTConfig{
 			Secret:    v.GetString("JWT_SECRET"),
-			ExpiresIn: time.Duration(v.GetInt("JWT_EXPIRES_IN_MIN")) * time.Minute,
+			ExpiresIn: parseJWTExpiry(v.GetString("JWT_EXPIRES_IN"), 60*time.Minute),
 			Algorithm: "HS256",
 		},
 		Security: SecurityConfig{
-			BcryptRounds: v.GetInt("BCRYPT_ROUNDS"),
-			CORSOrigins:  splitAndTrim(v.GetString("CORS_ORIGINS")),
+			BcryptRounds:    v.GetInt("BCRYPT_ROUNDS"),
+			OTPExpiryMinutes: v.GetInt("OTP_EXPIRY_MINUTES"),
+			DefaultPageSize:  v.GetInt("DEFAULT_PAGE_SIZE"),
+			CORSOrigins:     splitAndTrim(v.GetString("CORS_ORIGINS")),
 		},
-		SMTP: SMTPConfig{
-			Host:     v.GetString("SMTP_HOST"),
-			Port:     v.GetInt("SMTP_PORT"),
-			Username: v.GetString("SMTP_USERNAME"),
-			Password: v.GetString("SMTP_PASSWORD"),
-			From:     v.GetString("SMTP_FROM"),
+		Mail: MailConfig{
+			Host:        v.GetString("MAIL_HOST"),
+			Port:        v.GetInt("MAIL_PORT"),
+			Secure:      v.GetBool("MAIL_SECURE"),
+			Username:    v.GetString("MAIL_USERNAME"),
+			Password:    v.GetString("MAIL_PASSWORD"),
+			FromName:    v.GetString("MAIL_FROM_NAME"),
+			FromAddress: v.GetString("MAIL_FROM_ADDRESS"),
 		},
 		FeTemplate: FeTemplateConfig{
 			Remote:     v.GetBool("FE_TEMPLATE_REMOTE"),
@@ -202,13 +206,13 @@ func Load() (*Config, error) {
 			Driver:      v.GetString("STORAGE_DRIVER"),
 			Dir:         v.GetString("STORAGE_DIR"),
 			URLBase:     v.GetString("STORAGE_URL"),
-			S3Endpoint:  v.GetString("S3_ENDPOINT"),
-			S3Region:    v.GetString("S3_REGION"),
-			S3Bucket:    v.GetString("S3_BUCKET"),
-			S3AccessKey: v.GetString("S3_ACCESS_KEY"),
-			S3SecretKey: v.GetString("S3_SECRET_KEY"),
-			S3UseSSL:    v.GetBool("S3_USE_SSL"),
-			S3PublicURL: v.GetString("S3_PUBLIC_URL"),
+			S3Endpoint:  v.GetString("STORAGE_ENDPOINT"),
+			S3Region:    v.GetString("STORAGE_REGION"),
+			S3Bucket:    v.GetString("STORAGE_BUCKET"),
+			S3AccessKey: v.GetString("STORAGE_ACCESS_KEY_ID"),
+			S3SecretKey: v.GetString("STORAGE_SECRET_ACCESS_KEY"),
+			S3UseSSL:    v.GetBool("STORAGE_SSL"),
+			S3PublicURL: v.GetString("STORAGE_PUBLIC_URL"),
 		},
 	}
 
@@ -230,11 +234,15 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("DB_CONNECTION_LIFETIME_MIN", 60)
 	v.SetDefault("REDIS_URL", "redis://127.0.0.1:6379")
 	v.SetDefault("SESSION_TTL_HOURS", 6)
-	v.SetDefault("JWT_EXPIRES_IN_MIN", 60)
+	v.SetDefault("JWT_EXPIRES_IN", "1h")
 	v.SetDefault("BCRYPT_ROUNDS", 10)
+	v.SetDefault("OTP_EXPIRY_MINUTES", 10)
+	v.SetDefault("DEFAULT_PAGE_SIZE", 10)
 	v.SetDefault("CORS_ORIGINS", "")
-	v.SetDefault("SMTP_PORT", 587)
-	v.SetDefault("SMTP_FROM", "no-reply@goadmin.local")
+	v.SetDefault("MAIL_PORT", 587)
+	v.SetDefault("MAIL_SECURE", false)
+	v.SetDefault("MAIL_FROM_ADDRESS", "no-reply@goadmin.local")
+	v.SetDefault("MAIL_FROM_NAME", "GoAdmin")
 	v.SetDefault("FE_TEMPLATE_REMOTE", true)
 	v.SetDefault("FE_TEMPLATE_TREE_URL", "https://api.github.com/repos/lindoai/opentailwind/git/trees/master?recursive=1")
 	v.SetDefault("FE_TEMPLATE_RAW_URL", "https://raw.githubusercontent.com/lindoai/opentailwind/master/landings")
@@ -242,7 +250,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("STORAGE_DRIVER", "local")
 	v.SetDefault("STORAGE_DIR", "web/uploads")
 	v.SetDefault("STORAGE_URL", "/uploads")
-	v.SetDefault("S3_USE_SSL", true)
+	v.SetDefault("STORAGE_SSL", true)
 }
 
 // validate menerapkan aturan fail-fast: secret wajib di production.
@@ -259,7 +267,6 @@ func (c *Config) validate() error {
 			return fmt.Errorf("config: secret wajib di production kosong: %s", strings.Join(missing, ", "))
 		}
 	}
-	// Di luar production, beri secret dev agar app bisa jalan lokal/test.
 	if c.Session.Secret == "" {
 		c.Session.Secret = "dev-session-secret-change-me"
 	}
@@ -274,6 +281,19 @@ func (c *Config) validate() error {
 	return nil
 }
 
+// parseJWTExpiry mem-parse string durasi seperti "1h", "30m", "24h".
+// Fallback ke nilai default bila kosong atau tidak valid.
+func parseJWTExpiry(s string, fallback time.Duration) time.Duration {
+	if s == "" {
+		return fallback
+	}
+	d, err := time.ParseDuration(s)
+	if err != nil {
+		return fallback
+	}
+	return d
+}
+
 func splitAndTrim(s string) []string {
 	if strings.TrimSpace(s) == "" {
 		return nil
@@ -281,7 +301,6 @@ func splitAndTrim(s string) []string {
 	parts := strings.Split(s, ",")
 	out := make([]string, 0, len(parts))
 	for _, p := range parts {
-		// Buang trailing slash agar match origin tepat (pelajaran NodeAdmin CORS).
 		t := strings.TrimRight(strings.TrimSpace(p), "/")
 		if t != "" {
 			out = append(out, t)

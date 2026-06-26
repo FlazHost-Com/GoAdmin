@@ -11,10 +11,10 @@ import (
 
 // New memilih LogMailer saat host kosong, SMTPMailer saat host diisi.
 func TestMail_NewSelectsImpl(t *testing.T) {
-	if _, ok := mail.New(config.SMTPConfig{}).(mail.LogMailer); !ok {
+	if _, ok := mail.New(config.MailConfig{}).(mail.LogMailer); !ok {
 		t.Fatal("host kosong harus → LogMailer")
 	}
-	if _, ok := mail.New(config.SMTPConfig{Host: "smtp.example.com", Port: 587}).(*mail.SMTPMailer); !ok {
+	if _, ok := mail.New(config.MailConfig{Host: "smtp.example.com", Port: 587}).(*mail.SMTPMailer); !ok {
 		t.Fatal("host terisi harus → *SMTPMailer")
 	}
 }

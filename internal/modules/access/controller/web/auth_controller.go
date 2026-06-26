@@ -28,7 +28,7 @@ func NewAuthController(auth service.IAuthService, reset service.IPasswordResetSe
 
 // ShowRegister → GET /auth/register (publik).
 func (ctl *AuthController) ShowRegister(c *gin.Context) {
-	view.RenderView(c, "auth/register", gin.H{"title": "Daftar"})
+	view.RenderView(c, "auth/register", gin.H{"title": "Register"})
 }
 
 // Register → POST /auth/register. Buat akun (Active, tanpa role) lalu ke login.
@@ -39,7 +39,7 @@ func (ctl *AuthController) Register(c *gin.Context) {
 	confirm := c.PostForm("password_confirmation")
 
 	if password != confirm {
-		setFlashError(sessions.Default(c), "Konfirmasi password tidak cocok.")
+		setFlashError(sessions.Default(c), "Password & confirm password not match.")
 		c.Redirect(http.StatusFound, "/auth/register")
 		return
 	}
@@ -51,7 +51,7 @@ func (ctl *AuthController) Register(c *gin.Context) {
 		c.Redirect(http.StatusFound, "/auth/register")
 		return
 	}
-	setFlashSuccess(sessions.Default(c), "Akun berhasil dibuat. Silakan masuk.")
+	setFlashSuccess(sessions.Default(c), "Register Success.")
 	c.Redirect(http.StatusFound, "/auth/login")
 }
 
@@ -63,7 +63,7 @@ func (ctl *AuthController) ShowLogin(c *gin.Context) {
 		return
 	}
 	view.RenderView(c, "auth/login", gin.H{
-		"title": "Masuk",
+		"title": "Login",
 	})
 }
 
@@ -74,7 +74,7 @@ func (ctl *AuthController) Login(c *gin.Context) {
 
 	user, err := ctl.auth.Authenticate(c.Request.Context(), email, password)
 	if err != nil {
-		setFlashError(sessions.Default(c), "Email atau password salah.")
+		setFlashError(sessions.Default(c), "Wrong email or password.")
 		c.Redirect(http.StatusFound, "/auth/login")
 		return
 	}
@@ -95,7 +95,7 @@ func (ctl *AuthController) Logout(c *gin.Context) {
 
 // ShowForgot → GET /admin/v1/auth/reset/req (form minta OTP).
 func (ctl *AuthController) ShowForgot(c *gin.Context) {
-	view.RenderView(c, "auth/forgot", gin.H{"title": "Lupa Password"})
+	view.RenderView(c, "auth/forgot", gin.H{"title": "Forgot Password"})
 }
 
 // Forgot → POST /admin/v1/auth/reset/request. Kirim OTP (bila email terdaftar) lalu ke form reset.
@@ -106,7 +106,7 @@ func (ctl *AuthController) Forgot(c *gin.Context) {
 		c.Redirect(http.StatusFound, "/admin/v1/auth/reset/req")
 		return
 	}
-	setFlashSuccess(sessions.Default(c), "Jika email terdaftar, kode OTP telah dikirim.")
+	setFlashSuccess(sessions.Default(c), "OTP Send Success.")
 	c.Redirect(http.StatusFound, "/admin/v1/auth/reset/proc?email="+url.QueryEscape(email))
 }
 
@@ -124,7 +124,7 @@ func (ctl *AuthController) Reset(c *gin.Context) {
 
 	back := "/admin/v1/auth/reset/proc?email=" + url.QueryEscape(email)
 	if password != confirm {
-		setFlashError(sessions.Default(c), "Konfirmasi password tidak cocok.")
+		setFlashError(sessions.Default(c), "Password & confirm password not match.")
 		c.Redirect(http.StatusFound, back)
 		return
 	}
@@ -133,6 +133,6 @@ func (ctl *AuthController) Reset(c *gin.Context) {
 		c.Redirect(http.StatusFound, back)
 		return
 	}
-	setFlashSuccess(sessions.Default(c), "Password berhasil direset. Silakan masuk.")
+	setFlashSuccess(sessions.Default(c), "Reset Password Success.")
 	c.Redirect(http.StatusFound, "/auth/login")
 }

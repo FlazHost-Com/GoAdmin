@@ -5,8 +5,10 @@
 -- Postgres (native) & MySQL (DSN migrate pakai sql_mode=ANSI_QUOTES). SQLite
 -- dev memakai AutoMigrate (model GORM, column:desc) — bukan file ini.
 
+ALTER TABLE roles ADD COLUMN guard_name varchar(50) DEFAULT 'web';
 ALTER TABLE roles ADD COLUMN status varchar(20) DEFAULT 'Active';
 ALTER TABLE roles ADD COLUMN "desc" varchar(255);
+CREATE INDEX ix_roles_guard ON roles (guard_name);
 CREATE INDEX ix_roles_status ON roles (status);
 CREATE INDEX ix_roles_desc ON roles ("desc");
 

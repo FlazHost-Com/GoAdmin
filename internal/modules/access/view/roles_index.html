@@ -30,13 +30,6 @@
             </select>
           </th>
           <th width="22%"><input type="text" form="searchform" class="form-control" name="q_name" value="{{.filter.q_name}}"></th>
-          <th width="10%">
-            <select name="q_guard" form="searchform" class="form-control">
-              <option value="">Select</option>
-              <option value="web" {{if eq .filter.q_guard "web"}}selected{{end}}>web</option>
-              <option value="api" {{if eq .filter.q_guard "api"}}selected{{end}}>api</option>
-            </select>
-          </th>
           <th width="12%">
             <select name="q_status" form="searchform" class="form-control">
               <option value="">Select</option>
@@ -56,7 +49,6 @@
           <th width="5%"><input type="checkbox" id="checkall"></th>
           <th width="5%">No</th>
           <th width="22%">Name</th>
-          <th width="10%">Guard</th>
           <th width="12%">Status</th>
           <th width="18%">Description</th>
           <th width="10%">Action</th>
@@ -68,7 +60,6 @@
           <td><input type="checkbox" form="selection" name="selected[]" value="{{$r.ID}}"></td>
           <td>{{add $.meta.From $i}}</td>
           <td class="font-semibold">{{$r.Name}}</td>
-          <td><span class="badge text-bg-primary">{{$r.GuardName}}</span></td>
           <td class="text-left">
             {{if eq $r.Status "Active"}}<i class="fas fa-check-circle text-green-500 text-xl" title="Active"></i>
             {{else}}<i class="fas fa-times-circle text-red-500 text-xl" title="Inactive"></i>{{end}}
@@ -90,7 +81,7 @@
             </div>
           </td>
         </tr>
-        {{else}}<tr><td colspan="7" class="text-center text-gray-400 py-4">Tidak ada data.</td></tr>{{end}}
+        {{else}}<tr><td colspan="6" class="text-center text-gray-400 py-4">Tidak ada data.</td></tr>{{end}}
       </tbody>
     </table>
     {{template "admin/pagination" .}}

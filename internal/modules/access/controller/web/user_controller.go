@@ -72,7 +72,7 @@ func (ctl *UserController) DeleteSelected(c *gin.Context) {
 	if err := ctl.users.DestroyMany(c.Request.Context(), selectedIDs(c)); err != nil {
 		setFlashError(sessions.Default(c), errMessage(err))
 	} else {
-		setFlashSuccess(sessions.Default(c), "Pengguna terpilih berhasil dihapus.")
+		setFlashSuccess(sessions.Default(c), "Delete User Success.")
 	}
 	c.Redirect(http.StatusFound, "/admin/v1/access/user")
 }
@@ -106,7 +106,7 @@ func (ctl *UserController) Store(c *gin.Context) {
 	}
 	if len(errs) > 0 {
 		middleware.SetFieldErrors(sess, errs, userOld(c))
-		setFlashError(sess, "Periksa kembali isian yang ditandai.")
+		setFlashError(sess, "Please check the marked fields.")
 		c.Redirect(http.StatusFound, "/admin/v1/access/user/create")
 		return
 	}
@@ -115,7 +115,7 @@ func (ctl *UserController) Store(c *gin.Context) {
 		c.Redirect(http.StatusFound, "/admin/v1/access/user/create")
 		return
 	}
-	setFlashSuccess(sess, "Pengguna berhasil dibuat.")
+	setFlashSuccess(sess, "Create User Success.")
 	c.Redirect(http.StatusFound, "/admin/v1/access/user")
 }
 
@@ -159,7 +159,7 @@ func (ctl *UserController) Update(c *gin.Context) {
 	}
 	if len(errs) > 0 {
 		middleware.SetFieldErrors(sess, errs, userOld(c))
-		setFlashError(sess, "Periksa kembali isian yang ditandai.")
+		setFlashError(sess, "Please check the marked fields.")
 		c.Redirect(http.StatusFound, "/admin/v1/access/user/"+id+"/edit")
 		return
 	}
@@ -168,7 +168,7 @@ func (ctl *UserController) Update(c *gin.Context) {
 		c.Redirect(http.StatusFound, "/admin/v1/access/user/"+id+"/edit")
 		return
 	}
-	setFlashSuccess(sess, "Pengguna berhasil diperbarui.")
+	setFlashSuccess(sess, "Update User Success.")
 	c.Redirect(http.StatusFound, "/admin/v1/access/user")
 }
 
@@ -215,7 +215,7 @@ func (ctl *UserController) Destroy(c *gin.Context) {
 	if err := ctl.users.Destroy(c.Request.Context(), c.Param("id")); err != nil {
 		setFlashError(sessions.Default(c), errMessage(err))
 	} else {
-		setFlashSuccess(sessions.Default(c), "Pengguna berhasil dihapus.")
+		setFlashSuccess(sessions.Default(c), "Delete User Success.")
 	}
 	c.Redirect(http.StatusFound, "/admin/v1/access/user")
 }
