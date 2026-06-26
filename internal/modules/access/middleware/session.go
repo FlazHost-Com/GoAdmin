@@ -4,7 +4,7 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 
-	apperr "goadmin/internal/errors"
+	coreMW "goadmin/internal/middleware"
 	"goadmin/internal/router"
 )
 
@@ -36,14 +36,22 @@ func (g *Guard) EnsureAuthenticatedWeb(loginPath string) gin.HandlerFunc {
 }
 
 // AuthorizeWeb = RBAC route-driven untuk jalur web (a la NodeAdmin
-// AccessMiddleware; render 403 lewat error terpusat). Nama route + method
-// diturunkan dari request berjalan — TANPA argumen subjek. Administrator bypass.
+// AccessMiddleware). Nama route + method diturunkan dari request berjalan —
+// TANPA argumen subjek. Administrator bypass.
+// Bila akses ditolak: flash error 'Unauthorized.' + redirect ke Referer
+// (fallback /admin/v1/access/user). Pola PRG standar NodeAdmin.
 func AuthorizeWeb() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		user := UserFrom(c)
 		name := router.NameByMethodPath(c.Request.Method, c.FullPath())
 		if user == nil || !user.HasAccess(name, c.Request.Method) {
-			c.Error(apperr.Forbidden("Anda tidak memiliki izin untuk aksi ini"))
+			sess := sessions.Default(c)
+			coreMW.SetFlashError(sess, "Unauthorized.")
+			ref := c.Request.Referer()
+			if ref == "" {
+				ref = "/admin/v1/access/user"
+			}
+			c.Redirect(302, ref)
 			c.Abort()
 			return
 		}

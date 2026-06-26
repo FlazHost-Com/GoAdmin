@@ -2,6 +2,7 @@ package migration
 
 import (
 	"errors"
+	"time"
 
 	"gorm.io/gorm"
 
@@ -22,7 +23,13 @@ func Seed(db *gorm.DB, adminEmail, adminPassword string, bcryptRounds int) error
 	var admin model.Role
 	err := db.Where("name = ?", model.RoleAdministrator).First(&admin).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		admin = model.Role{ID: helpers.NewID(), Name: model.RoleAdministrator, Status: model.StatusActive}
+		admin = model.Role{
+			ID:          helpers.NewID(),
+			Name:        model.RoleAdministrator,
+			GuardName:   "web",
+			Status:      model.StatusActive,
+			Description: "",
+		}
 		if err := db.Create(&admin).Error; err != nil {
 			return err
 		}
@@ -40,14 +47,20 @@ func Seed(db *gorm.DB, adminEmail, adminPassword string, bcryptRounds int) error
 		if err != nil {
 			return err
 		}
+		now := time.Now()
+		phone := "12345678910"
 		user := model.User{
-			ID:       helpers.NewID(),
-			Code:     helpers.NewCode("U"),
-			Name:     "Administrator",
-			Email:    adminEmail,
-			Password: hash,
-			Status:   model.StatusActive,
-			Timezone: "UTC",
+			ID:            helpers.NewID(),
+			Code:          "0000000001",
+			Name:          "Administrator",
+			Phone:         phone,
+			Email:         adminEmail,
+			EmailVerified: &now,
+			Password:      hash,
+			Status:        model.StatusActive,
+			Timezone:      "Asia/Jakarta",
+			Blocked:       false,
+			BlockedReason: "",
 		}
 		if err := db.Create(&user).Error; err != nil {
 			return err

@@ -11,13 +11,11 @@ import (
 // request berikutnya). Pola PRG: set flash → redirect → halaman target tampil.
 
 func setFlashSuccess(sess sessions.Session, msg string) {
-	sess.Set(middleware.FlashSuccessKey, msg)
-	_ = sess.Save()
+	middleware.SetFlashSuccess(sess, msg)
 }
 
 func setFlashError(sess sessions.Session, msg string) {
-	sess.Set(middleware.FlashErrorKey, msg)
-	_ = sess.Save()
+	middleware.SetFlashError(sess, msg)
 }
 
 // errMessage mengambil pesan publik dari *AppError (fallback generik).

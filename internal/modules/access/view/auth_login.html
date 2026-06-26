@@ -2,7 +2,7 @@
 <div class="w-full max-w-5xl tw-card overflow-hidden grid md:grid-cols-2">
   <!-- Visual panel -->
   <div class="hidden md:flex sidebar-gradient items-center justify-center p-10">
-    {{if .setting}}{{if .setting.LoginImage}}<img class="max-w-full max-h-80 object-contain" src="{{.setting.LoginImage}}" alt="">{{else}}<i class="fas fa-chart-line text-white" style="font-size:6rem;opacity:.85"></i>{{end}}{{else}}<i class="fas fa-chart-line text-white" style="font-size:6rem;opacity:.85"></i>{{end}}
+    <img class="max-w-full max-h-80 object-contain" src="/modules/setting/login-image.png" alt="">
   </div>
 
   <!-- Form panel -->
@@ -23,7 +23,7 @@
       <input type="hidden" name="_csrf" value="{{._csrf}}">
       <div class="mb-3"><label for="email" class="form-label fw-semibold">Email</label><input type="email" class="form-control" id="email" placeholder="Email address" name="email" required autofocus></div>
       <div class="mb-3"><label for="password" class="form-label fw-semibold">Password</label><input type="password" class="form-control" id="password" placeholder="Password" name="password" required></div>
-      <button type="submit" class="btn btn-primary-tw w-100" style="padding-top:.6rem;padding-bottom:.6rem;margin-bottom:.75rem">Login</button>
+      <button type="submit" class="btn btn-primary-tw w-100 py-2 mb-3">Login</button>
       <div class="d-flex justify-content-between" style="font-size:.8rem;margin-bottom:.75rem">
         <label class="flex items-center gap-2" style="cursor:pointer">
           <input type="checkbox" id="remember" name="remember" value="1">

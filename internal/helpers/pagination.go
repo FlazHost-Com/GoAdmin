@@ -6,20 +6,21 @@ import (
 	"gorm.io/gorm"
 )
 
-// PageMeta adalah metadata paginasi yang dikirim ke view/JSON.
+// PageMeta adalah metadata paginasi yang dikirim ke view/JSON (format NodeAdmin).
 type PageMeta struct {
-	Total       int64 `json:"total"`
-	PerPage     int   `json:"per_page"`
+	Total       int64 `json:"total_data"`
+	PerPage     int   `json:"page_size"`
 	CurrentPage int   `json:"current_page"`
-	LastPage    int   `json:"last_page"`
+	LastPage    int   `json:"total_page"`
 	From        int   `json:"from"`
 	To          int   `json:"to"`
 }
 
 // Paginated membungkus hasil list + meta (padanan paginate() NodeAdmin).
+// Bentuk JSON: { "datas": [...], "paginate_data": { ... } }.
 type Paginated[T any] struct {
-	Data []T      `json:"data"`
-	Meta PageMeta `json:"meta"`
+	Data []T      `json:"datas"`
+	Meta PageMeta `json:"paginate_data"`
 }
 
 const (

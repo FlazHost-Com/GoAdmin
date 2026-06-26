@@ -7,9 +7,9 @@ import (
 )
 
 // ResponseHandler menstandarkan bentuk respons JSON API (padanan ResponseHandler
-// di core NodeAdmin): { success, message, data }.
+// di core NodeAdmin): { status, message, data }.
 type apiEnvelope struct {
-	Success bool        `json:"success"`
+	Status  bool        `json:"status"`
 	Message string      `json:"message"`
 	Data    interface{} `json:"data,omitempty"`
 	Errors  interface{} `json:"errors,omitempty"`
@@ -17,12 +17,12 @@ type apiEnvelope struct {
 
 // JSONSuccess mengirim respons sukses standar.
 func JSONSuccess(c *gin.Context, status int, message string, data interface{}) {
-	c.JSON(status, apiEnvelope{Success: true, Message: message, Data: data})
+	c.JSON(status, apiEnvelope{Status: true, Message: message, Data: data})
 }
 
 // JSONError mengirim respons error standar (dipakai middleware ErrorHandler).
 func JSONError(c *gin.Context, status int, message string, errs interface{}) {
-	c.JSON(status, apiEnvelope{Success: false, Message: message, Errors: errs})
+	c.JSON(status, apiEnvelope{Status: false, Message: message, Errors: errs})
 }
 
 // OK = 200 sukses.

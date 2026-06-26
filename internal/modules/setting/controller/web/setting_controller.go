@@ -172,13 +172,11 @@ func (ctl *SettingController) uploadImage(c *gin.Context, field string) (string,
 // --- helper flash & actor (paket web access dipakai lewat re-deklarasi lokal) ---
 
 func setFlashSuccess(sess sessions.Session, msg string) {
-	sess.Set(middleware.FlashSuccessKey, msg)
-	_ = sess.Save()
+	middleware.SetFlashSuccess(sess, msg)
 }
 
 func setFlashError(sess sessions.Session, msg string) {
-	sess.Set(middleware.FlashErrorKey, msg)
-	_ = sess.Save()
+	middleware.SetFlashError(sess, msg)
 }
 
 func errMessage(err error) string {

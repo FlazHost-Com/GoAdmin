@@ -102,20 +102,17 @@ func (ctl *ProfileController) Update(c *gin.Context) {
 
 	if len(errs) > 0 {
 		middleware.SetFieldErrors(sess, errs, profileOld(c))
-		sess.Set(middleware.FlashErrorKey, "Please check the marked fields.")
-		_ = sess.Save()
+		middleware.SetFlashError(sess, "Please check the marked fields.")
 		c.Redirect(http.StatusFound, "/admin/v1/profile")
 		return
 	}
 
 	if _, err := ctl.profiles.Update(c.Request.Context(), user.ID, in); err != nil {
-		sess.Set(middleware.FlashErrorKey, publicErr(err))
-		_ = sess.Save()
+		middleware.SetFlashError(sess, publicErr(err))
 		c.Redirect(http.StatusFound, "/admin/v1/profile")
 		return
 	}
-	sess.Set(middleware.FlashSuccessKey, "Update Profile Success.")
-	_ = sess.Save()
+	middleware.SetFlashSuccess(sess, "Update Profile Success.")
 	c.Redirect(http.StatusFound, "/admin/v1/profile")
 }
 

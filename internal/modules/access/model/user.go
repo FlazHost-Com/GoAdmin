@@ -50,6 +50,17 @@ func (u *User) IsAdministrator() bool {
 	return false
 }
 
+// HasRole true bila user memiliki role dengan nama yang diberikan.
+// Dipakai template helper hasRole di FuncMap view.
+func (u *User) HasRole(name string) bool {
+	for _, r := range u.Roles {
+		if r.Name == name {
+			return true
+		}
+	}
+	return false
+}
+
 // HasAccess true bila user (lewat salah satu role) memiliki permission untuk
 // route bernama `name` + HTTP `method` (model route-driven a la NodeAdmin:
 // permission.name == nama-route DAN permission.method == method). Administrator

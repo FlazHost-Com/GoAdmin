@@ -72,6 +72,49 @@ func FuncMap() template.FuncMap {
 			h, ok := user.(interface{ HasAccess(name, method string) bool })
 			return ok && h.HasAccess(name, method)
 		},
+		// hasRole(currentUser, "Administrator") → bool. Cek apakah user memiliki
+		// role dengan nama tertentu. Padanan hasRole(name) NodeAdmin. Nil-aman.
+		"hasRole": func(user any, roleName string) bool {
+			if user == nil {
+				return false
+			}
+			if rv := reflect.ValueOf(user); rv.Kind() == reflect.Ptr && rv.IsNil() {
+				return false
+			}
+			h, ok := user.(interface{ HasRole(name string) bool })
+			return ok && h.HasRole(roleName)
+		},
+		// getOld(data, "field") → nilai lama form (untuk repopulasi setelah validasi
+		// gagal). Membaca dari data["old"] yang di-set RenderView dari sesi flash.
+		"getOld": func(data interface{}, key string) string {
+			m, ok := data.(gin.H)
+			if !ok {
+				return ""
+			}
+			old, ok := m["old"].(map[string]string)
+			if !ok {
+				return ""
+			}
+			return old[key]
+		},
+		// getError(data, "field") → pesan error validasi per-field (untuk inline
+		// error di form). Membaca dari data["errors"] yang di-set RenderView.
+		"getError": func(data interface{}, key string) string {
+			m, ok := data.(gin.H)
+			if !ok {
+				return ""
+			}
+			errs, ok := m["errors"].(map[string]string)
+			if !ok {
+				return ""
+			}
+			return errs[key]
+		},
+		// getFile(path) → URL file (untuk menampilkan gambar/dokumen yang diupload).
+		// Mengembalikan path apa adanya; tambahkan prefix storage bila diperlukan.
+		"getFile": func(path string) string {
+			return path
+		},
 	}
 }
 

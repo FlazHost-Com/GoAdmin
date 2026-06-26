@@ -16,7 +16,7 @@ import (
 
 // cacheTTL = masa berlaku cache setting (dibaca tiap request). Pendek + ada
 // invalidasi saat update → perubahan tampil instan, beban query minimal.
-const cacheTTL = 5 * time.Minute
+const cacheTTL = 60 * time.Second
 
 // SettingService mengimplementasi ISettingService. DB di-inject lewat konstruktor;
 // cache dirakit internal (per-instance).

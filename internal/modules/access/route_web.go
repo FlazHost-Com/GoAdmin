@@ -14,7 +14,10 @@ import (
 // loginLimiter meredam brute-force login: maks 10 percobaan / 15 menit / IP.
 var loginLimiter = middleware.NewRateLimiter(10, 15*time.Minute)
 
-// otpLimiter membatasi permintaan OTP reset: maks 5 / 15 menit / IP.
+// authLimiter membatasi aksi auth (register, reset request): maks 10 / 15 menit / IP.
+var authLimiter = middleware.NewRateLimiter(10, 15*time.Minute)
+
+// otpLimiter membatasi verifikasi OTP reset password: maks 5 / 15 menit / IP.
 var otpLimiter = middleware.NewRateLimiter(5, 15*time.Minute)
 
 // registerWebRoutes memasang route web modul access:
@@ -42,14 +45,14 @@ func registerWebRoutes(ctx *router.RegistrationContext) {
 	// Register (publik; di-rate-limit).
 	ctx.Web.GET("/auth/register", authCtl.ShowRegister)
 	router.Register("GET", "web.auth.register", "/auth/register")
-	ctx.Web.POST("/auth/register", otpLimiter.Middleware(), authCtl.Register)
+	ctx.Web.POST("/auth/register", authLimiter.Middleware(), authCtl.Register)
 	router.Register("POST", "web.auth.register.post", "/auth/register")
 
 	// Reset password via OTP email (publik; nama/path PERSIS NodeAdmin:
 	// req/proc = form view, request/process = submit; OTP di-rate-limit).
 	ctx.Web.GET("/admin/v1/auth/reset/req", authCtl.ShowForgot)
 	router.Register("GET", "admin.v1.auth.reset.req", "/admin/v1/auth/reset/req")
-	ctx.Web.POST("/admin/v1/auth/reset/request", otpLimiter.Middleware(), authCtl.Forgot)
+	ctx.Web.POST("/admin/v1/auth/reset/request", authLimiter.Middleware(), authCtl.Forgot)
 	router.Register("POST", "admin.v1.auth.reset.request", "/admin/v1/auth/reset/request")
 	ctx.Web.GET("/admin/v1/auth/reset/proc", authCtl.ShowReset)
 	router.Register("GET", "admin.v1.auth.reset.proc", "/admin/v1/auth/reset/proc")

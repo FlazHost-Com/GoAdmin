@@ -8,12 +8,33 @@ import (
 )
 
 // Kunci flash di sesi (one-shot feedback pasca-redirect, pola PRG).
+// FlashKey menyimpan satu objek JSON {key:"success"|"error", message:"..."}
+// — format NodeAdmin: satu kunci tunggal, bukan flash_success/flash_error terpisah.
 const (
-	FlashSuccessKey = "flash_success"
-	FlashErrorKey   = "flash_error"
-	FieldErrorsKey  = "field_errors" // JSON map field→pesan (validasi inline)
-	FieldOldKey     = "field_old"    // JSON map field→nilai lama (repopulasi)
+	FlashKey       = "flash"        // unified flash session key
+	FieldErrorsKey = "field_errors" // JSON map field→pesan (validasi inline)
+	FieldOldKey    = "field_old"    // JSON map field→nilai lama (repopulasi)
 )
+
+// flashMsg adalah bentuk JSON yang disimpan di sesi untuk flash one-shot.
+type flashMsg struct {
+	Key     string `json:"key"`
+	Message string `json:"message"`
+}
+
+// SetFlashSuccess menyimpan flash sukses ke sesi (pola PRG).
+func SetFlashSuccess(sess sessions.Session, msg string) {
+	b, _ := json.Marshal(flashMsg{Key: "success", Message: msg})
+	sess.Set(FlashKey, string(b))
+	_ = sess.Save()
+}
+
+// SetFlashError menyimpan flash error ke sesi (pola PRG).
+func SetFlashError(sess sessions.Session, msg string) {
+	b, _ := json.Marshal(flashMsg{Key: "error", Message: msg})
+	sess.Set(FlashKey, string(b))
+	_ = sess.Save()
+}
 
 // SetFieldErrors menyimpan error per-field + nilai lama (old input) ke sesi untuk
 // SATU redirect (pola PRG). Padanan `req.session.errors`/`req.session.old` +
@@ -36,14 +57,17 @@ func Flash() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		sess := sessions.Default(c)
 		changed := false
-		if v, ok := sess.Get(FlashSuccessKey).(string); ok && v != "" {
-			c.Set(FlashSuccessKey, v)
-			sess.Delete(FlashSuccessKey)
-			changed = true
-		}
-		if v, ok := sess.Get(FlashErrorKey).(string); ok && v != "" {
-			c.Set(FlashErrorKey, v)
-			sess.Delete(FlashErrorKey)
+		// Unified flash: baca satu kunci, parse JSON {key, message}.
+		if v, ok := sess.Get(FlashKey).(string); ok && v != "" {
+			var fm flashMsg
+			if json.Unmarshal([]byte(v), &fm) == nil {
+				if fm.Key == "success" {
+					c.Set("flash_success", fm.Message)
+				} else if fm.Key == "error" {
+					c.Set("flash_error", fm.Message)
+				}
+			}
+			sess.Delete(FlashKey)
 			changed = true
 		}
 		// Error per-field + old input (JSON) → parse ke map → context.
