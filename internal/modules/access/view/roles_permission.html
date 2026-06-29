@@ -1,7 +1,6 @@
 {{define "roles/permission"}}{{template "admin/head" .}}
 <div class="flex items-center justify-between mb-6">
   <h1 class="text-2xl font-bold text-gray-800">Permission Management</h1>
-  <a href="/admin/v1/access/role" class="btn btn-sm btn-secondary"><i class="fas fa-fw fa-arrow-left"></i> Kembali</a>
 </div>
 
 <form id="searchform" method="get"></form>
@@ -11,10 +10,10 @@
 
 <div class="tw-card p-0 overflow-hidden">
   <div class="px-6 py-4 border-b flex items-center justify-between">
-    <h2 class="text-lg font-bold" style="color:var(--primary)">Permission List — {{.role.Name}}</h2>
+    <h2 class="text-lg font-bold" style="color:var(--primary)">Permission List</h2>
     <div class="btn-group btn-sm">
-      <button type="submit" form="selection" formaction="/admin/v1/access/role/{{.role.ID}}/permission/assign_selected" data-confirm="Assign permission terpilih?" class="btn btn-info btn-sm"><i class="fas fa-fw fa-check"></i> Assign Selected</button>
-      <button type="submit" form="selection" formaction="/admin/v1/access/role/{{.role.ID}}/permission/unassign_selected" data-confirm="Unassign permission terpilih?" class="btn btn-danger btn-sm"><i class="fas fa-fw fa-times"></i> Unassign Selected</button>
+      <button type="submit" form="selection" formaction="/admin/v1/access/role/{{.role.ID}}/permission/assign_selected" data-confirm="Confirm Assign" class="btn btn-info btn-sm"><i class="fas fa-fw fa-check"></i> Assign Selected</button>
+      <button type="submit" form="selection" formaction="/admin/v1/access/role/{{.role.ID}}/permission/unassign_selected" data-confirm="Confirm Unassign" class="btn btn-danger btn-sm"><i class="fas fa-fw fa-times"></i> Unassign Selected</button>
     </div>
   </div>
   <div class="p-4" style="overflow-x:auto">
@@ -30,15 +29,15 @@
               <option value="100" {{if eq .filter.q_page_size 100}}selected{{end}}>100</option>
             </select>
           </th>
-          <th width="25%"><input type="text" form="searchform" class="form-control" name="q_name" value="{{.filter.q_name}}"></th>
+          <th width="25%"><input type="text" form="searchform" class="form-control" id="q_name" name="q_name" value="{{.filter.q_name}}"></th>
           <th width="12%">
             <select name="q_status" form="searchform" class="form-control">
-              <option value="">Select</option>
-              <option value="Active" {{if eq .filter.q_status "Active"}}selected{{end}}>Assigned</option>
-              <option value="Inactive" {{if eq .filter.q_status "Inactive"}}selected{{end}}>Not assigned</option>
+              <option value="" disabled selected>Select</option>
+              <option value="Active" {{if eq .filter.q_status "Active"}}selected{{end}}>Active</option>
+              <option value="Inactive" {{if eq .filter.q_status "Inactive"}}selected{{end}}>Inactive</option>
             </select>
           </th>
-          <th width="20%"><input type="text" form="searchform" class="form-control" name="q_desc" value="{{.filter.q_desc}}"></th>
+          <th width="20%"><input type="text" form="searchform" class="form-control" id="q_desc" name="q_desc" value="{{.filter.q_desc}}"></th>
           <th width="5%" class="text-center align-middle">
             <div class="btn-group">
               <button type="submit" form="searchform" class="btn btn-sm btn-success"><i class="fas fa-fw fa-search"></i></button>
@@ -60,7 +59,7 @@
         <tr>
           <td><input type="checkbox" form="selection" name="selected[]" value="{{$p.ID}}"></td>
           <td>{{add $.meta.From $i}}</td>
-          <td class="font-mono text-sm">{{$p.Name}}{{if $p.Method}} <span class="badge text-bg-primary">{{$p.Method}}</span>{{end}}</td>
+          <td>{{$p.Name}}</td>
           <td class="text-left">
             {{if index $.assigned $p.ID}}<i class="fas fa-check-circle text-green-500 text-xl" title="Assigned"></i>
             {{else}}<i class="fas fa-times-circle text-gray-300 text-xl" title="Not assigned"></i>{{end}}

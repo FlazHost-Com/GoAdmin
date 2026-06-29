@@ -81,7 +81,7 @@
       <label class="form-label fw-semibold d-block">Role</label>
       <div class="d-flex flex-wrap gap-3 p-2 rounded border {{if index .errors "roles"}}border-danger{{end}}">
         {{range .roles}}
-        <label class="d-flex align-items-center gap-2"><input type="checkbox" name="role_ids" value="{{.ID}}" class="w-4 h-4" {{if index $.selected .ID}}checked{{end}}><span>{{.Name}}</span></label>
+        <label class="d-flex align-items-center gap-2"><input type="checkbox" name="roles[]" value="{{.ID}}" class="w-4 h-4" {{if index $.selected .ID}}checked{{end}}><span>{{.Name}}</span></label>
         {{else}}<span class="text-muted small">Belum ada role.</span>{{end}}
       </div>
       {{with index .errors "roles"}}<div class="text-red-600 text-sm mt-1">{{.}}</div>{{end}}

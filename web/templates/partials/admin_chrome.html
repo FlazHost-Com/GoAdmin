@@ -88,8 +88,8 @@
   <!-- jQuery (dependensi Trumbowyg + select-all tabel) -->
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <!-- Trumbowyg (rich text editor untuk .trumbowyg-editor) -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Trumbowyg/2.27.3/ui/trumbowyg.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Trumbowyg/2.27.3/trumbowyg.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Trumbowyg/2.21.0/ui/trumbowyg.min.css" integrity="sha512-XjpikIIW1P7jUS8ZWIznGs9KHujZQxhbnEsqMVQ5GBTTRmmJe32+ULipOxFePB8F8j9ahKmCjyJJ22VNEX60yg==" crossorigin="anonymous">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Trumbowyg/2.21.0/trumbowyg.min.js" integrity="sha512-l6MMck8/SpFCgbJnIEfVsWQ8MaNK/n2ppTiELW3I2BFY5pAm/WjkNHSt+2OD7+CZtygs+jr+dAgzNdjNuCU7kw==" crossorigin="anonymous"></script>
   <!-- Plugin file manager: tombol toolbar upload/list/hapus gambar editor ke /admin/v1/media -->
   <script src="/assets/vendor/trumbowyg/filemanager.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -127,13 +127,14 @@
   if(ov) ov.addEventListener('click', function(){ sbToggle(false); });
   // Rich text editor: aktifkan pada textarea.trumbowyg-editor (sinkron HTML → textarea saat submit).
   if (window.jQuery && jQuery.fn.trumbowyg) {
+    jQuery('.trumbowyg').trumbowyg();
     jQuery('.trumbowyg-editor').trumbowyg({
       btns: [['viewHTML'],['formatting'],['strong','em','del'],['superscript','subscript'],['link'],['filemanager'],['justifyLeft','justifyCenter','justifyRight','justifyFull'],['unorderedList','orderedList'],['horizontalRule'],['removeformat'],['fullscreen']],
       semantic: { div: 'div' }, autogrow: true, removeformatPasted: true,
       plugins: { filemanager: true }
     });
     jQuery('form').on('submit', function(){
-      jQuery(this).find('.trumbowyg-editor').each(function(){ if (jQuery(this).data('trumbowyg')) jQuery(this).val(jQuery(this).trumbowyg('html')); });
+      jQuery(this).find('.trumbowyg, .trumbowyg-editor').each(function(){ if (jQuery(this).data('trumbowyg')) jQuery(this).val(jQuery(this).trumbowyg('html')); });
     });
   }
   // Fallback gambar gagal/ kosong load → placeholder ikon (fa-image/fa-user)

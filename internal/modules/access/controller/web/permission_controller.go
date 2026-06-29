@@ -51,9 +51,8 @@ func (ctl *PermissionController) DeleteSelected(c *gin.Context) {
 
 // Create → GET /admin/v1/access/permission/create.
 func (ctl *PermissionController) Create(c *gin.Context) {
-	view.RenderView(c, "permissions/form", gin.H{
+	view.RenderView(c, "permissions/create", gin.H{
 		"title": "Tambah Permission", "active": "permission",
-		"action": "/admin/v1/access/permission/store", "permission": nil,
 	})
 }
 
@@ -77,7 +76,7 @@ func (ctl *PermissionController) Edit(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	view.RenderView(c, "permissions/form", gin.H{
+	view.RenderView(c, "permissions/edit", gin.H{
 		"title": "Ubah Permission", "active": "permission",
 		"action": "/admin/v1/access/permission/" + perm.ID + "/update?_method=PUT", "permission": perm,
 	})

@@ -15,15 +15,7 @@
       </select>
     </div>
     <div class="mb-3"><label class="form-label fw-semibold">Method</label>
-      <select name="method" class="form-control">
-        <option value="">—</option>
-        {{$m := ""}}{{if .permission}}{{$m = .permission.Method}}{{end}}
-        <option value="GET" {{if eq $m "GET"}}selected{{end}}>GET</option>
-        <option value="POST" {{if eq $m "POST"}}selected{{end}}>POST</option>
-        <option value="PATCH" {{if eq $m "PATCH"}}selected{{end}}>PATCH</option>
-        <option value="PUT" {{if eq $m "PUT"}}selected{{end}}>PUT</option>
-        <option value="DELETE" {{if eq $m "DELETE"}}selected{{end}}>DELETE</option>
-      </select>
+      <input type="text" name="method" value="{{if .permission}}{{.permission.Method}}{{end}}" class="form-control">
     </div>
     <div class="mb-3"><label class="form-label fw-semibold">Status</label>
       <select name="status" class="form-control">

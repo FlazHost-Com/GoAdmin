@@ -16,6 +16,12 @@ func MethodOverride(next http.Handler) http.Handler {
 			if m := strings.ToUpper(r.URL.Query().Get("_method")); m != "" {
 				switch m {
 				case http.MethodPut, http.MethodPatch, http.MethodDelete:
+					// Parse body SEBELUM mengubah method: net/http hanya mem-parse
+					// body form untuk POST/PUT/PATCH, bukan DELETE. Jika method
+					// diubah ke DELETE sebelum ParseForm dipanggil, r.PostForm
+					// tidak akan terisi dan CSRF yang dikirim via body tidak dapat
+					// dibaca middleware downstream.
+					_ = r.ParseMultipartForm(32 << 20)
 					r.Method = m
 				}
 			}

@@ -15,7 +15,7 @@
     <h2 class="text-lg font-bold" style="color:var(--primary)">User List</h2>
     <div class="btn-group btn-sm">
       <a href="/admin/v1/access/user/create" class="btn btn-success btn-sm"><i class="fas fa-fw fa-plus"></i> Add Data</a>
-      <button type="submit" form="selection" data-confirm="Hapus pengguna terpilih?" class="btn btn-danger btn-sm"><i class="fas fa-fw fa-times"></i> Delete Selected</button>
+      <button type="submit" form="selection" data-confirm="Confirm Delete" class="btn btn-danger btn-sm"><i class="fas fa-fw fa-times"></i> Delete Selected</button>
     </div>
   </div>
 
@@ -92,7 +92,7 @@
                 <a href="/admin/v1/access/user/{{$u.ID}}/edit" class="dropdown-item"><i class="fas fa-pen fa-fw"></i> Edit</a>
                 {{if $.currentUser}}{{if ne $u.ID $.currentUser.ID}}
                 <div class="dropdown-divider"></div>
-                <form method="post" action="/admin/v1/access/user/{{$u.ID}}/delete?_method=DELETE&_csrf={{$._csrf}}" data-confirm="Hapus pengguna {{$u.Name}}?" class="m-0">
+                <form method="post" action="/admin/v1/access/user/{{$u.ID}}/delete?_method=DELETE&_csrf={{$._csrf}}" data-confirm="Confirm Delete" class="m-0">
                   <button type="submit" class="dropdown-item danger"><i class="fas fa-trash fa-fw"></i> Delete</button>
                 </form>
                 {{end}}{{end}}

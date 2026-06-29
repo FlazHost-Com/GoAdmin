@@ -4,7 +4,7 @@ package dto
 type CreateRoleInput struct {
 	Name          string   `json:"name" form:"name" binding:"required,max=50"`
 	Status        string   `json:"status" form:"status" binding:"omitempty,oneof=Active Inactive"`
-	Description   string   `json:"description" form:"description" binding:"omitempty,max=255"`
+	Description   string   `json:"desc" form:"desc" binding:"omitempty,max=255"`
 	PermissionIDs []string `json:"permission_ids" form:"permission_ids" binding:"omitempty,dive,max=36"`
 }
 
@@ -12,7 +12,7 @@ type CreateRoleInput struct {
 type UpdateRoleInput struct {
 	Name          string   `json:"name" form:"name" binding:"required,max=50"`
 	Status        string   `json:"status" form:"status" binding:"omitempty,oneof=Active Inactive"`
-	Description   string   `json:"description" form:"description" binding:"omitempty,max=255"`
+	Description   string   `json:"desc" form:"desc" binding:"omitempty,max=255"`
 	PermissionIDs []string `json:"permission_ids" form:"permission_ids" binding:"omitempty,dive,max=36"`
 }
 

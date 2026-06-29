@@ -12,7 +12,7 @@ type CreateUserInput struct {
 	Status   string   `json:"status" form:"status" binding:"omitempty,oneof=Active Inactive"`
 	Timezone string   `json:"timezone" form:"timezone" binding:"omitempty,max=64"`
 	Picture  string   `json:"picture" form:"picture" binding:"omitempty,max=255"`
-	RoleIDs  []string `json:"role_ids" form:"role_ids" binding:"omitempty,dive,max=36"`
+	RoleIDs  []string `json:"role_ids" form:"roles[]" binding:"omitempty,dive,max=36"`
 	// Blocked: checkbox form (value "1" → true; absen → false). BlockedReason: alasan blokir.
 	Blocked       bool   `json:"blocked" form:"blocked"`
 	BlockedReason string `json:"blocked_reason" form:"blocked_reason" binding:"omitempty,max=255"`
@@ -29,7 +29,7 @@ type UpdateUserInput struct {
 	Status   string   `json:"status" form:"status" binding:"omitempty,oneof=Active Inactive"`
 	Timezone string   `json:"timezone" form:"timezone" binding:"omitempty,max=64"`
 	Picture  string   `json:"picture" form:"picture" binding:"omitempty,max=255"`
-	RoleIDs  []string `json:"role_ids" form:"role_ids" binding:"omitempty,dive,max=36"`
+	RoleIDs  []string `json:"role_ids" form:"roles[]" binding:"omitempty,dive,max=36"`
 	// Blocked: checkbox form (value "1" → true; absen → false). BlockedReason: alasan blokir.
 	Blocked       bool   `json:"blocked" form:"blocked"`
 	BlockedReason string `json:"blocked_reason" form:"blocked_reason" binding:"omitempty,max=255"`
