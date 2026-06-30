@@ -69,6 +69,7 @@ type RedisConfig struct {
 }
 
 type SessionConfig struct {
+	Driver string // cookie | redis (default: cookie)
 	Secret string
 	TTL    time.Duration
 }
@@ -173,6 +174,7 @@ func Load() (*Config, error) {
 			URL: v.GetString("REDIS_URL"),
 		},
 		Session: SessionConfig{
+			Driver: v.GetString("SESSION_DRIVER"),
 			Secret: v.GetString("SESSION_SECRET"),
 			TTL:    time.Duration(v.GetInt("SESSION_TTL_HOURS")) * time.Hour,
 		},
@@ -247,6 +249,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("FE_TEMPLATE_TREE_URL", "https://api.github.com/repos/lindoai/opentailwind/git/trees/master?recursive=1")
 	v.SetDefault("FE_TEMPLATE_RAW_URL", "https://raw.githubusercontent.com/lindoai/opentailwind/master/landings")
 	v.SetDefault("FE_TEMPLATE_CACHE_DIR", "web/cache/fetemplates")
+	v.SetDefault("SESSION_DRIVER", "cookie")
 	v.SetDefault("STORAGE_DRIVER", "local")
 	v.SetDefault("STORAGE_DIR", "web/uploads")
 	v.SetDefault("STORAGE_URL", "/uploads")

@@ -10,6 +10,7 @@ import (
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
+	redisstore "github.com/gin-contrib/sessions/redis"
 	"github.com/gin-gonic/gin"
 
 	"goadmin/internal/config"
@@ -57,14 +58,31 @@ func Build(c *container.Container) *gin.Engine {
 		// webGroup non-nil → modul UI mendaftarkan route web-nya.
 		mountWebLayer(engine, cfg)
 
-		// Sesi web (cookie store; di produksi ganti redis store untuk stateless).
-		store := cookie.NewStore([]byte(cfg.Session.Secret))
-		store.Options(sessions.Options{
+		// Sesi web: pilih store berdasarkan SESSION_DRIVER (cookie | redis).
+		// - cookie  : sesi di signed cookie client-side (default, stateless).
+		// - redis   : sesi di Redis (persist lintas restart, butuh REDIS_URL).
+		// Sesi web: pilih store berdasarkan SESSION_DRIVER (cookie | redis).
+		// - cookie  : sesi di signed cookie client-side (default, stateless).
+		// - redis   : sesi di Redis (persist lintas restart, butuh REDIS_URL).
+		sessOpts := sessions.Options{
 			MaxAge:   int(cfg.Session.TTL.Seconds()),
 			HttpOnly: true,
 			Secure:   cfg.IsProd,
 			Path:     "/",
-		})
+		}
+		var store sessions.Store
+		if cfg.Session.Driver == "redis" {
+			rs, err := redisstore.NewStore(10, "tcp", cfg.Redis.URL, "", "", []byte(cfg.Session.Secret))
+			if err != nil {
+				panic("session: gagal konek Redis store: " + err.Error())
+			}
+			rs.Options(sessOpts)
+			store = rs
+		} else {
+			cs := cookie.NewStore([]byte(cfg.Session.Secret))
+			cs.Options(sessOpts)
+			store = cs
+		}
 		webGroup = engine.Group("/")
 		webGroup.Use(sessions.Sessions("goadmin_session", store))
 		// CSRF setelah sesi (butuh sesi). Hanya jalur web — API (JWT) dikecualikan.
