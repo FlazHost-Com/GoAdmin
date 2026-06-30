@@ -249,7 +249,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("FE_TEMPLATE_TREE_URL", "https://api.github.com/repos/lindoai/opentailwind/git/trees/master?recursive=1")
 	v.SetDefault("FE_TEMPLATE_RAW_URL", "https://raw.githubusercontent.com/lindoai/opentailwind/master/landings")
 	v.SetDefault("FE_TEMPLATE_CACHE_DIR", "web/cache/fetemplates")
-	v.SetDefault("SESSION_DRIVER", "cookie")
+	v.SetDefault("SESSION_DRIVER", "database")
 	v.SetDefault("STORAGE_DRIVER", "local")
 	v.SetDefault("STORAGE_DIR", "web/uploads")
 	v.SetDefault("STORAGE_URL", "/uploads")

@@ -16,6 +16,7 @@ import (
 	"goadmin/internal/config"
 	"goadmin/internal/container"
 	"goadmin/internal/middleware"
+	"goadmin/internal/store/dbsession"
 	settingmodel "goadmin/internal/modules/setting/model"
 	settingsvc "goadmin/internal/modules/setting/service"
 	"goadmin/internal/modules/setting/theme"
@@ -58,12 +59,10 @@ func Build(c *container.Container) *gin.Engine {
 		// webGroup non-nil → modul UI mendaftarkan route web-nya.
 		mountWebLayer(engine, cfg)
 
-		// Sesi web: pilih store berdasarkan SESSION_DRIVER (cookie | redis).
-		// - cookie  : sesi di signed cookie client-side (default, stateless).
-		// - redis   : sesi di Redis (persist lintas restart, butuh REDIS_URL).
-		// Sesi web: pilih store berdasarkan SESSION_DRIVER (cookie | redis).
-		// - cookie  : sesi di signed cookie client-side (default, stateless).
-		// - redis   : sesi di Redis (persist lintas restart, butuh REDIS_URL).
+		// Sesi web: pilih store berdasarkan SESSION_DRIVER (cookie | redis | database).
+		// - database : sesi di tabel `sessions` DB utama (default, persist lintas restart).
+		// - redis    : sesi di Redis (persist lintas restart, butuh REDIS_URL).
+		// - cookie   : sesi di signed cookie client-side (stateless, tanpa server storage).
 		sessOpts := sessions.Options{
 			MaxAge:   int(cfg.Session.TTL.Seconds()),
 			HttpOnly: true,
@@ -71,14 +70,22 @@ func Build(c *container.Container) *gin.Engine {
 			Path:     "/",
 		}
 		var store sessions.Store
-		if cfg.Session.Driver == "redis" {
+		switch cfg.Session.Driver {
+		case "redis":
 			rs, err := redisstore.NewStore(10, "tcp", cfg.Redis.URL, "", "", []byte(cfg.Session.Secret))
 			if err != nil {
 				panic("session: gagal konek Redis store: " + err.Error())
 			}
 			rs.Options(sessOpts)
 			store = rs
-		} else {
+		case "database":
+			ds, err := dbsession.New(c.DB, []byte(cfg.Session.Secret))
+			if err != nil {
+				panic("session: gagal inisialisasi database store: " + err.Error())
+			}
+			ds.Options(sessOpts)
+			store = ds
+		default:
 			cs := cookie.NewStore([]byte(cfg.Session.Secret))
 			cs.Options(sessOpts)
 			store = cs
