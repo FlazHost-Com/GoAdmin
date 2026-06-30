@@ -1,6 +1,9 @@
 package middleware
 
 import (
+	"net/http"
+	"strings"
+
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 
@@ -33,7 +36,12 @@ func Authorize() gin.HandlerFunc {
 
 // setFlashAndRedirect menyimpan flash error ke sesi lalu redirect ke Referer
 // (fallback ke fallbackURL bila Referer kosong). Pola PRG standar NodeAdmin.
+// Untuk API routes (/api/...) yang tidak punya session middleware: return JSON 403.
 func setFlashAndRedirect(c *gin.Context, msg, fallbackURL string) {
+	if strings.HasPrefix(c.FullPath(), "/api/") {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": msg})
+		return
+	}
 	sess := sessions.Default(c)
 	coreMW.SetFlashError(sess, msg)
 	ref := c.Request.Referer()
