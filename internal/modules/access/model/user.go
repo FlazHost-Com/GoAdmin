@@ -18,7 +18,7 @@ type User struct {
 	Name          string     `gorm:"type:varchar(50);index" json:"name"`
 	Phone         string     `gorm:"type:varchar(15);index" json:"phone"`
 	Email         string     `gorm:"type:varchar(255);uniqueIndex" json:"email"`
-	EmailVerified *time.Time `json:"email_verified_at,omitempty"`
+	EmailVerified *time.Time `gorm:"column:email_verified_at" json:"email_verified_at,omitempty"`
 	// Password hash bcrypt — tak pernah diserialisasi ke JSON.
 	Password string `gorm:"type:varchar(255)" json:"-"`
 	// OTP reset password: hash + masa berlaku (epoch ms). Tak pernah ke JSON.
