@@ -7,3 +7,4 @@ ALTER TABLE permissions DROP COLUMN method;
 
 ALTER TABLE roles DROP COLUMN "desc";
 ALTER TABLE roles DROP COLUMN status;
+ALTER TABLE roles DROP COLUMN guard_name;
