@@ -42,7 +42,7 @@ jobs:
           TOKEN: ${{ steps.apptoken.outputs.token }}
         run: |
           set -euo pipefail
-          git clone --depth 1 "https://x-access-token:${TOKEN}@github.com/flazhost-runner/goadmin.git" target
+          git clone --depth 1 "https://x-access-token:${TOKEN}@github.com/flazhost-runner/goadmin.git" "$RUNNER_TEMP/target"
           # Sync seluruh kode app; file deploy di flazhost-runner TIDAK ditimpa.
           rsync -a --delete \
             --exclude='.git/' \
@@ -50,8 +50,8 @@ jobs:
             --exclude='/docker-entrypoint.sh' \
             --exclude='/.dockerignore' \
             --exclude='/.github/' \
-            . target/
-          cd target
+            . "$RUNNER_TEMP/target/"
+          cd "$RUNNER_TEMP/target"
           git add -A
           if git diff --cached --quiet; then
             echo "Tidak ada perubahan kode app — lewati."
