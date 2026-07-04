@@ -50,6 +50,7 @@ jobs:
             --exclude='/docker-entrypoint.sh' \
             --exclude='/.dockerignore' \
             --exclude='/.github/' \
+            --exclude='/.flazhost/' \
             . "$RUNNER_TEMP/target/"
           cd "$RUNNER_TEMP/target"
           git add -A
